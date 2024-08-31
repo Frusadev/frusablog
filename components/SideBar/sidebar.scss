@@ -1,0 +1,13 @@
+@import "@/colors/dark.scss";
+
+* {
+  color: $text_bold;
+}
+
+.sidebar {
+  background-color: $background;
+}
+
+.menu-btn {
+  width: 250px;
+}

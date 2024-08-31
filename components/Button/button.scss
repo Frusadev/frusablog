@@ -1,0 +1,25 @@
+@import "@/colors/dark.scss";
+
+.button {
+  border-radius: 2rem;
+  background-color: $accent;
+  transition: background-color .19s ease-in-out;
+}
+
+.transparent {
+  border-radius: 2rem;
+  background-color: transparent;
+}
+
+.transparent:hover {
+  background-color: $accent;
+  animation-timing-function: ease;
+}
+
+.clicked {
+  background-color: $ripple_accent;
+}
+
+.disbled {
+  background-color: gray;
+}
