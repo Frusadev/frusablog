@@ -35,9 +35,9 @@ function lex(input: string): MarkdownToken[] | undefined {
 	};
 
 	let tokenList: MarkdownToken[] = [];
-	let postion = 0;
-	while (postion <= input.length - 1) {
-		const char = input[postion];
+	let position = 0;
+	while (position <= input.length - 1) {
+		const char = input[position];
 		switch (char) {
 			case "_":
 				if (!(currentText === "")) {
@@ -68,20 +68,22 @@ function lex(input: string): MarkdownToken[] | undefined {
 				};
 				break;
 			case "*":
-				if (!(currentText === "")) {
-					currentToken = {
-						tokenName: "MD_TEXT",
-						tokenValue: currentText,
-					};
-					tokenList = tokenList.concat(currentToken);
-					currentText = "";
-				}
-				if (input.length > postion && input[postion + 1] === "*") {
+				if (input.length > position && input[position + 1] === "*") {
+					if (!(currentText === "")) {
+						currentToken = {
+							tokenName: "MD_TEXT",
+							tokenValue: currentText,
+						};
+						tokenList = tokenList.concat(currentToken);
+						currentText = "";
+					}
 					currentToken = {
 						tokenName: "MD_BOLD",
 						tokenValue: "**",
 					};
-					postion += 1;
+					position += 1;
+				} else {
+					currentText = currentText.concat(char);
 				}
 				break;
 			case "~":
@@ -98,20 +100,27 @@ function lex(input: string): MarkdownToken[] | undefined {
 					tokenValue: "~",
 				};
 				break;
-			case "```":
-				if (!(currentText === "")) {
+			case "`":
+				if (
+					input.length > position + 2 &&
+					input[position + 1].concat(input[position + 2]) === "``"
+				) {
+					if (!(currentText === "")) {
+						currentToken = {
+							tokenName: "MD_TEXT",
+							tokenValue: currentText,
+						};
+						tokenList = tokenList.concat(currentToken);
+						currentText = "";
+					}
 					currentToken = {
-						tokenName: "MD_TEXT",
-						tokenValue: currentText,
+						tokenName: "MD_CODE",
+						tokenValue: "```",
 					};
-					tokenList = tokenList.concat(currentToken);
-					currentText = "";
+					position += 2;
+				} else {
+					currentText = currentText.concat(char);
 				}
-				currentToken = {
-					tokenName: "MD_CODE",
-					tokenValue: "```",
-				};
-				postion += 2;
 				break;
 			case "\n":
 				if (!(currentText === "")) {
@@ -153,7 +162,7 @@ function lex(input: string): MarkdownToken[] | undefined {
 		if (!(currentToken === emptyToken)) {
 			tokenList = tokenList.concat(currentToken);
 		}
-		postion++;
+		position++;
 	}
 	if (currentText.trim() !== "") {
 		tokenList = tokenList.concat({
@@ -165,79 +174,76 @@ function lex(input: string): MarkdownToken[] | undefined {
 	return tokenList;
 }
 
-function parseInput(input: MarkdownToken[]): MarkdownAST | undefined {
-	const rootNode: AstNode = {
-		token: {
-			tokenName: "MD_ROOT",
-			tokenValue: "",
-		},
-		children: [],
-		parent: undefined,
-	};
-	const ast: MarkdownAST = {};
-	const tokensWithChildren: string[] = [
-		"MD_ITALIC",
-		"MD_BOLD",
-		"MD_LIST",
-		"MD_NUM_LIST",
-		"MD_CODE",
-		"MD_OVERLOAD",
-	];
-
-	const tagTokens: string[] = [
-		"MD_ITALIC",
-		"MD_BOLD",
-		"MD_CODE",
-		"MD_OVERLOAD",
-	];
-
-	const tokensWithoutChildren: string[] = ["MD_TEXT", "MD_NEW_LINE"];
-
-	let postion = 0;
-	let currentParent: AstNode = {};
-	let currentNode: AstNode = {};
-	type Semantics = {
-		elements: [
-			{
-				positionInInput: number;
-				reference: AstNode;
-			},
-		];
-	};
-
-	let semantics: Semantics = { elements: []};
-
-	while (postion <= input.length - 1) {
-		currentNode = {
-			token: input[postion],
-			parent: currentParent.token === undefined ? rootNode : currentParent,
-		};
-		const currentToken = currentNode.token ?? {
-			tokenName: "",
-			tokenValue: "",
-		};
-		if (currentToken?.tokenName in tagTokens) {
-			switch (currentToken?.tokenName) {
-				case "MD_ITALIC":
-          semantics.elements = semantics.elements.concat({
-          
-        })
-				default:
-			}
-		}
-		postion++;
-	}
-	ast.nodes = ast.nodes?.concat(rootNode);
-	return ast;
-}
+//function parseInput(input: MarkdownToken[]): MarkdownAST | undefined {
+//	const rootNode: AstNode = {
+//		token: {
+//			tokenName: "MD_ROOT",
+//			tokenValue: "",
+//		},
+//		children: [],
+//		parent: undefined,
+//	};
+//	const ast: MarkdownAST = {};
+//	const tokensWithChildren: string[] = [
+//		"MD_ITALIC",
+//		"MD_BOLD",
+//		"MD_LIST",
+//		"MD_NUM_LIST",
+//		"MD_CODE",
+//		"MD_OVERLOAD",
+//	];
+//
+//	const tagTokens: string[] = [
+//		"MD_ITALIC",
+//		"MD_BOLD",
+//		"MD_CODE",
+//		"MD_OVERLOAD",
+//	];
+//
+//	const tokensWithoutChildren: string[] = ["MD_TEXT", "MD_NEW_LINE"];
+//
+//	let postion = 0;
+//	let currentParent: AstNode = {};
+//	let currentNode: AstNode = {};
+//	type Semantics = {
+//		elements: [
+//			{
+//				positionInInput: number;
+//				reference: AstNode;
+//			},
+//		];
+//	};
+//
+//	let semantics: Semantics = { elements: [] };
+//
+//	while (postion <= input.length - 1) {
+//		currentNode = {
+//			token: input[postion],
+//			parent: currentParent.token === undefined ? rootNode : currentParent,
+//		};
+//		const currentToken = currentNode.token ?? {
+//			tokenName: "",
+//			tokenValue: "",
+//		};
+//		if (currentToken?.tokenName in tagTokens) {
+//			switch (currentToken?.tokenName) {
+//				case "MD_ITALIC":
+//					semantics.elements = semantics.elements.concat({});
+//				default:
+//			}
+//		}
+//		postion++;
+//	}
+//	ast.nodes = ast.nodes?.concat(rootNode);
+//	return ast;
+//}
 
 // test
 console.log(
 	lex(
-		"_This is markdown_ and text and a \n new line \n 2. \n 2. ... and you know what?",
+		"_This is markdown_ and text and a ``` ``` \n new line \n 2. \n 2. ... and you know what?",
 	),
 );
-console.log(parseInput("Hello world"));
 
 function buildASTTable(input: string): [MarkdownAST] | null {
 	return null;
