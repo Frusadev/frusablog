@@ -1,0 +1,25 @@
+services:
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    environment:
+      - DB_STRING=${DB_STRING}
+      - ALEMBIC_DB_URL=${ALEMBIC_DB_URL}
+      - DEBUG=${DEBUG}
+      - EMAIL_APP_PASSWORD=${EMAIL_APP_PASSWORD}
+      - APP_EMAIL_ADDRESS=${APP_EMAIL_ADDRESS}
+      - EMAIL_TEMPLATES_PATH=${EMAIL_TEMPLATES_PATH}
+  db:
+    image: postgres:17
+    environment:
+      - POSTGRES_USER=username
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=yourdb
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
