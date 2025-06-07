@@ -1,0 +1,1 @@
+LOGIN_SESSION_COOKIE_NAME = "as_key_"
