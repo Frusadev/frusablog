@@ -19,6 +19,7 @@ class CommentDTO(BaseModel):
     author: UserDTO
     children: list["CommentDTO"]
     parent: "CommentDTO"
+    level: int
 
 
 class CommentMutationDTO(BaseModel):

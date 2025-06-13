@@ -39,3 +39,4 @@ class PostMutationDTO(BaseModel):
     content: str
     published: bool
     archived: bool
+    featured: bool
