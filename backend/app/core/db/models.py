@@ -46,6 +46,7 @@ class User(SQLModel, table=True):
     liked_posts: list["Post"] = Relationship(
         back_populates="liked_by", link_model=UserPostLikeLink
     )
+    visits: list["VisitAction"] = Relationship(back_populates="user")
 
     def to_dto(self):
         return UserDTO(id=self.id, username=self.username, name=self.name)
@@ -91,6 +92,7 @@ class Post(SQLModel, table=True):
     liked_by: list[User] = Relationship(
         back_populates="liked_posts", link_model=UserPostLikeLink
     )
+    views: list["ViewAction"] = Relationship(back_populates="post")
 
     def to_dto(self):
         return PostDTO(
@@ -140,6 +142,7 @@ class Comment(SQLModel, table=True):
             children=[child.to_dto() for child in self.children],
             author=self.author.to_dto(),
             parent=self.parent.to_dto(),
+            level=self.level,
         )
 
 
@@ -162,6 +165,26 @@ class FileResource(SQLModel, table=True):
             created_at=self.created_at,
             name=self.name,
         )
+
+
+class ViewAction(SQLModel, table=True):
+    id: str = Field(default_factory=gen_id, primary_key=True)
+    post_id: UUID = Field(foreign_key="post.id")
+    created_at: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc)
+    )
+    post: Post = Relationship(back_populates="views")
+    view_time: int = 5  # in seconds
+
+
+class VisitAction(SQLModel, table=True):
+    id: UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    user_id: str | None = Field(foreign_key="user.id")
+    created_at: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc)
+    )
+    user: User | None = Relationship(back_populates="visits")
+    visit_time: int = 5  # in seconds
 
 
 class Role(SQLModel, table=True):
