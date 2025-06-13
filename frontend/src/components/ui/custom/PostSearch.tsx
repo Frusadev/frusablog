@@ -1,11 +1,66 @@
-import { Button } from "../button";
+"use client";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Input } from "../input";
+import { useEffect, useState } from "react";
+import { searchPosts } from "@/lib/api/requests/post";
 
-export default function PostSearch() {
+export default function PostSearch({
+  setPosts,
+  setLoading,
+  setIsSuccess,
+  setIsError,
+  skip,
+  limit,
+}: {
+  setPosts: (posts: any[]) => void;
+  skip?: number;
+  limit?: number;
+  setLoading: (loading: boolean) => void;
+  setIsSuccess: (success: boolean) => void;
+  setIsError: (error: boolean) => void;
+}) {
+  const queryClient = useQueryClient();
+  const [query, setQuery] = useState("");
+  const searchQuery = useQuery({
+    queryKey: [
+      "/posts/search",
+      { query: query, skip: skip ?? 0, limit: limit ?? 10 },
+    ],
+    queryFn: ({ queryKey }) => {
+      const params = queryKey[1] as {
+        query: string;
+        skip: number;
+        limit: number;
+      };
+      return searchPosts(params);
+    },
+  });
+  useEffect(() => {
+    setLoading(searchQuery.isLoading);
+  }, [searchQuery.isLoading]);
+  useEffect(() => {
+    setIsSuccess(searchQuery.isSuccess);
+    setPosts(searchQuery.data ?? []);
+  }, [searchQuery.isSuccess, searchQuery.data]);
+  useEffect(() => {
+    setIsError(searchQuery.isError);
+  }, [searchQuery.isError]);
+
   return (
     <div className="w-2/3 max-w-[500px] flex gap-2">
-      <Input placeholder="Search posts..." className="rounded-xl" />
-      <Button className="rounded-xl cursor-pointer">Search</Button>
+      <Input
+        placeholder="Search posts..."
+        className="rounded-xl"
+        onChange={(e) => {
+          setQuery(e.target.value);
+          queryClient.invalidateQueries({
+            queryKey: [
+              "/posts/search",
+              { query: query, skip: skip ?? 0, limit: limit ?? 10 },
+            ],
+          });
+        }}
+      />
     </div>
   );
 }

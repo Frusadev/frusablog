@@ -8,12 +8,13 @@ export default function ThemeSwitch() {
   const { theme, setTheme } = useTheme();
   return (
     <Button
-      className="rounded-full w-10 h-10 absolute top-4 right-4 z-50"
+      className="rounded-full w-10 h-10"
       onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
       variant="ghost"
+      size="sm"
     >
-      <Show when={theme === "dark"} else={<Sun />}>
-        <MoonStar />
+      <Show when={theme === "dark"} else={<Sun className="w-5 h-5" />}>
+        <MoonStar className="w-5 h-5" />
       </Show>
     </Button>
   );
