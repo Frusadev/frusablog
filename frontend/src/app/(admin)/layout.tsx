@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import "@/app/globals.css";
-import CanPost from "@/components/wrappers/CanPost";
+import AdminGuard from "@/components/wrappers/AdminGuard";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import AdminSidebar from "@/components/ui/custom/AdminSidebar";
 import { ChartLine, Newspaper, Pencil, PlusCircle, Timer } from "lucide-react";
@@ -21,7 +21,7 @@ export default function RootLayout({
 }>) {
   return (
     <main className="w-full h-full">
-      <CanPost redirect="/">
+      <AdminGuard>
         <SidebarProvider>
           <AdminSidebar
             links={[
@@ -61,7 +61,7 @@ export default function RootLayout({
             </div>
           </div>
         </SidebarProvider>
-      </CanPost>
+      </AdminGuard>
     </main>
   );
 }

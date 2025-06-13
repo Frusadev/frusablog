@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import QueryProvider from "@/components/providers/QueryProvider";
-import ThemeSwitch from "@/components/ui/custom/ThemeSwitch";
+import { Toaster } from "sonner";
 
 const description = `
 Stay ahead in the ever-evolving world of technology with tutorials, coding tips, software reviews, dev stories, and deep dives into AI, web dev, open-source, and more.
@@ -23,8 +23,8 @@ export default function RootLayout({
       <QueryProvider>
         <ThemeProvider attribute={"class"} defaultTheme="system">
           <body className="relative h-screen w-screen">
-            <ThemeSwitch />
             {children}
+            <Toaster />
           </body>
         </ThemeProvider>
       </QueryProvider>

@@ -15,5 +15,9 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return <>{children}</>;
+  return (
+    <main className="flex w-full h-full justify-center items-center">
+      {children}
+    </main>
+  );
 }
