@@ -12,6 +12,7 @@ from app.api.routes.v1.dto.post import (
 )
 from app.api.routes.v1.providers import post as post_provider
 from app.api.routes.v1.providers.auth.email import get_current_user
+from app.api.routes.v1.providers.user import get_optional_current_user
 from app.core.db.models import User
 from app.core.db.setup import create_db_session
 
@@ -22,8 +23,14 @@ CurrentUserDependency = Annotated[User, Depends(get_current_user)]
 
 
 @post_router.get("/post/{post_id}", response_model=PostDTO)
-async def get_post(db_session: DBSessionDependency, post_id: UUID):
-    return await post_provider.get_post(db_session=db_session, id=post_id)
+async def get_post(
+    db_session: DBSessionDependency,
+    post_id: UUID,
+    current_user: Annotated[User | None, Depends(get_optional_current_user)],
+):
+    return await post_provider.get_post(
+        db_session=db_session, id=post_id, current_user=current_user
+    )
 
 
 @post_router.get("/posts", response_model=list[PostDTO])
@@ -45,6 +52,36 @@ async def get_featured_posts(
 ):
     return await post_provider.get_featured_posts(
         db_session=db_session, skip=skip, limit=limit
+    )
+
+
+@post_router.get("/posts/drafts", response_model=list[PostDTO])
+async def get_draft_posts(
+    db_session: DBSessionDependency,
+    current_user: CurrentUserDependency,
+    skip: Annotated[int, Query(ge=0)] = 0,
+    limit: Annotated[int, Query(le=20)] = 10,
+):
+    return await post_provider.get_draft_posts(
+        db_session=db_session,
+        current_user=current_user,
+        skip=skip,
+        limit=limit,
+    )
+
+
+@post_router.get("/posts/archived", response_model=list[PostDTO])
+async def get_archived_posts(
+    db_session: DBSessionDependency,
+    current_user: CurrentUserDependency,
+    skip: Annotated[int, Query(ge=0)] = 0,
+    limit: Annotated[int, Query(le=20)] = 10,
+):
+    return await post_provider.get_archived_posts(
+        db_session=db_session,
+        current_user=current_user,
+        skip=skip,
+        limit=limit,
     )
 
 

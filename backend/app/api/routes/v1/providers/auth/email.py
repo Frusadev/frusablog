@@ -116,8 +116,8 @@ async def login(
     def send_login_mail():
         my_name = "Daniel Ametsowou"
         login_url = (
-            get_env("BACKEND_URL")
-            + "/v1/auth/email/authenticate/"
+            get_env("FRONTEND_URL")
+            + "/authenticate/"
             + auth_session.id
         )
         unsubscribe_url = get_env("FRONTEND_URL") + "/account/unsubscribe"

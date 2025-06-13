@@ -3,6 +3,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Query
 from sqlmodel import Session
 
+from app.api.routes.v1.dto.post import PostDTO
 import app.api.routes.v1.providers.tag as tag_provider
 from app.api.routes.v1.dto.message import MessageResponse
 from app.api.routes.v1.dto.tag import TagCreationDTO, TagDTO
@@ -20,7 +21,7 @@ CurrentUserDependency = Annotated[User, Depends(get_current_user)]
 async def get_tags(
     db_session: DBSessionDependency,
     skip: Annotated[int, Query(ge=0)] = 0,
-    limit: Annotated[int, Query(le=50)] = 10,
+    limit: Annotated[int, Query(le=200)] = 10,
 ):
     return await tag_provider.get_tags(
         db_session=db_session,
@@ -51,7 +52,7 @@ async def delete_tag(
     )
 
 
-@tag_router.get("/tag/{tag_id}/related-posts")
+@tag_router.get("/tag/{tag_id}/related-posts", response_model=list[PostDTO])
 async def get_related_posts(
     db_session: DBSessionDependency,
     tag_id: str,

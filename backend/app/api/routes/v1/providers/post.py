@@ -8,6 +8,7 @@ from app.core.db.builders.permission import PermissionBuilder
 from app.core.db.models import Post, Role, Tag, User
 from app.core.security.checkers import check_existence
 from app.core.security.permissions import (
+    ACTION_READ,
     ACTION_READWRITE,
     POST_RESOURCE,
     GlobalPermissionCheckModel,
@@ -95,6 +96,7 @@ async def edit_post(
     post.content = data.content
     post.published = data.published
     post.archived = data.archived
+    post.featured = data.featured
     db_session.add(post)
     db_session.commit()
     return post.to_dto()
@@ -110,16 +112,57 @@ async def like_post(db_session: Session, current_user: User, post_id: UUID):
     return post.to_dto()
 
 
-async def get_post(db_session: Session, id: UUID):
+async def get_post(db_session: Session, id: UUID, current_user: User | None):
     post = check_existence(db_session.get(Post, id))
+    if post.archived is True or post.published is False:
+        user = check_existence(current_user)
+        PermissionChecker(
+            db_session=db_session,
+            roles=user.roles,
+            pcheck_models=[
+                PermissionCheckModel(
+                    resource_name=POST_RESOURCE,
+                    resource_id=id,
+                    action_names=[ACTION_READ],
+                ),
+                PermissionCheckModel(
+                    resource_name=POST_RESOURCE,
+                    resource_id=id,
+                    action_names=[ACTION_READWRITE],
+                ),
+            ],
+            bypass_role="admin",
+        ).check(either=True)
     return post.to_dto()
 
 
 async def get_posts(db_session: Session, skip: int, limit: int):
     posts = db_session.exec(
-        select(Post).offset(skip).limit(limit).order_by(desc(Post.created_at))
+        select(Post)
+        .where(Post.archived == False, Post.published == True)
+        .offset(skip)
+        .limit(limit)
+        .order_by(desc(Post.created_at))
     ).all()
     return [post.to_dto() for post in posts]
+
+
+async def get_draft_posts(
+    db_session: Session, current_user: User, skip: int, limit: int
+):
+    draft_posts = db_session.exec(
+        select(Post).where(Post.published == False).offset(skip).limit(limit)
+    )
+    return [post.to_dto() for post in draft_posts]
+
+
+async def get_archived_posts(
+    db_session: Session, current_user: User, skip: int, limit: int
+):
+    archived_posts = db_session.exec(
+        select(Post).where(Post.archived == True).offset(skip).limit(limit)
+    )
+    return [post.to_dto() for post in archived_posts]
 
 
 async def search_posts(db_session: Session, query: str, skip: int, limit: int):
@@ -135,7 +178,7 @@ async def search_posts(db_session: Session, query: str, skip: int, limit: int):
         .offset(skip)
         .limit(limit)
     ).all()
-    return {"posts": [post.to_dto() for post in posts]}
+    return [post.to_dto() for post in posts]
 
 
 async def get_featured_posts(db_session: Session, skip: int, limit: int):

@@ -52,11 +52,14 @@ async def get_related_posts(
     db_session: Session, tag_id: str, skip: int, limit: int
 ):
     tag = check_existence(db_session.get(Tag, tag_id), detail="Tag not found.")
-    posts = tag.posts
-    start = (
-        skip + limit - 1 if len(posts) > skip + limit - 1 else len(posts) - 1
+    posts = [post.to_dto() for post in tag.posts]
+    start = skip if len(posts) > skip * limit - 1 else len(posts) - 1
+    end = (
+        skip * limit + limit
+        if len(posts) > skip * limit + limit - 1
+        else len(posts) - 1
     )
-    return posts[start : len(posts) - 1]
+    return posts[start:end]
 
 
 async def delete_tag(db_session: Session, current_user: User, tag_id: str):
