@@ -19,7 +19,8 @@ import { getPost, updatePost } from "@/lib/api/requests/post";
 import { getTags, createTag } from "@/lib/api/requests/tag";
 import { uploadFile, type FileResource } from "@/lib/api/requests/file";
 import { getResourceUrl } from "@/lib/utils/fileUtils";
-import type { Post, PostUpdateDTO } from "@/lib/api/dto/post";
+import { createPostSlug } from "@/lib/utils/slug";
+import type { PostUpdateDTO } from "@/lib/api/dto/post";
 import type { Tag } from "@/lib/api/dto/tag";
 import { 
   ArrowLeft, 
@@ -28,9 +29,6 @@ import {
   X, 
   Plus,
   Eye,
-  EyeOff,
-  Star,
-  Archive,
   Sparkles
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -120,7 +118,9 @@ export default function PostEditPage() {
     onSuccess: () => {
       toast.success("Post updated successfully");
       queryClient.invalidateQueries({ queryKey: ["post", postId] });
-      router.push(`/post/${postId}`);
+      if (post) {
+        router.push(`/post/${createPostSlug(post.title, post.id)}`);
+      }
     },
     onError: () => {
       toast.error("Failed to update post");
@@ -172,6 +172,7 @@ export default function PostEditPage() {
         coverId = fileResource.id;
       } catch (error) {
         toast.error("Failed to upload cover image");
+        console.error("Cover upload error:", error);
         return;
       }
     } else if (!coverPreview) {
@@ -215,7 +216,7 @@ export default function PostEditPage() {
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground mb-4">
-                The post you're trying to edit doesn't exist or you don't have permission to edit it.
+                The post you&apos;re trying to edit doesn&apos;t exist or you don&apos;t have permission to edit it.
               </p>
               <Button onClick={() => router.back()} variant="outline">
                 <ArrowLeft className="w-4 h-4 mr-2" />
@@ -250,7 +251,7 @@ export default function PostEditPage() {
           
           <div className="flex items-center gap-2">
             <Button
-              onClick={() => router.push(`/post/${postId}`)}
+              onClick={() => post && router.push(`/post/${createPostSlug(post.title, post.id)}`)}
               variant="outline"
               size="sm"
             >
