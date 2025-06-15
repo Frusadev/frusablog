@@ -7,7 +7,7 @@ import { ReactNode, useEffect } from "react";
 import { Spinner } from "@/components/ui/Spinner";
 
 export default function AdminGuard({ children }: { children?: ReactNode }) {
-  const { isSuccess, isError, isLoading, error } = useQuery({
+  const { isSuccess, isError, isLoading } = useQuery({
     queryKey: ["/users/me/can-post"],
     queryFn: canPost,
     retry: false,

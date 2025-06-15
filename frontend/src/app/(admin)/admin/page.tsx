@@ -5,23 +5,35 @@ import ListView from "@/components/layouts/ListView";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import PostSearch from "@/components/ui/custom/PostSearch";
-import { Input } from "@/components/ui/input";
 import Show from "@/components/wrappers/Show";
 import { Post } from "@/lib/api/dto/post";
-import { Star, Grid, List, ListIcon, ListTree } from "lucide-react";
+import { Star, Grid, ListTree } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 export default function AdminPage() {
   const [queriedPosts, setQueriedPosts] = useState<Post[]>([]);
   const [loadingQueriedPosts, setLoadingQueriedPosts] = useState(false);
   const [isSuccessQueryingPosts, setIsSuccessQueryingPosts] = useState(false);
   const [isErrorQueryingPosts, setIsErrorQueryingPosts] = useState(false);
-  const [skip, setSkip] = useState(0);
-  const [limit, setLimit] = useState(10);
+  const [skip] = useState(0);
+  const [limit] = useState(10);
   const [postsOrientation, setPostsOrientation] = useState<"grid" | "list">(
     "grid",
   );
+  useEffect(() => {
+    if (loadingQueriedPosts) {
+      setIsSuccessQueryingPosts(false);
+      setIsErrorQueryingPosts(false);
+    }
+    if (isSuccessQueryingPosts) {
+      setLoadingQueriedPosts(false);
+    }
+    if (isErrorQueryingPosts) {
+      toast.error("Error loading posts. Please try again later.");
+    }
+  }, [loadingQueriedPosts, isSuccessQueryingPosts, isErrorQueryingPosts]);
   return (
     <div className="flex flex-col">
       <div className="flex items-center justify-between p-4">
@@ -31,7 +43,7 @@ export default function AdminPage() {
             <Badge variant="outline">Total: {queriedPosts.length}</Badge>
             <Badge variant="secondary" className="flex items-center gap-1">
               <Star className="w-3 h-3 fill-current" />
-              Featured: {queriedPosts.filter(post => post.featured).length}
+              Featured: {queriedPosts.filter((post) => post.featured).length}
             </Badge>
           </div>
         </div>

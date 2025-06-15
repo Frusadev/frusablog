@@ -13,13 +13,18 @@ import Show from "@/components/wrappers/Show";
 import { Star, TrendingUp, Calendar, User, Eye } from "lucide-react";
 import { timeAgo } from "@/lib/utils";
 import { getResourceUrl } from "@/lib/utils/fileUtils";
+import { createPostSlug } from "@/lib/utils/slug";
 import { useRouter } from "next/navigation";
+import { useVisitTracking } from "@/hooks/useUserTracking";
 
 const POSTS_PER_PAGE = 8;
 
 export default function MainPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const router = useRouter();
+  
+  // Initialize visit tracking for the main page
+  useVisitTracking();
   
   // Calculate skip value for pagination
   const skip = (currentPage - 1) * POSTS_PER_PAGE;
@@ -71,7 +76,7 @@ export default function MainPage() {
                   {posts.map((post) => (
                     <div
                       key={post.id}
-                      onClick={() => router.push(`/post/${post.id}`)}
+                      onClick={() => router.push(`/post/${createPostSlug(post.title, post.id)}`)}
                       className="cursor-pointer transform transition-transform hover:scale-[1.02]"
                     >
                       <PostCard
@@ -127,7 +132,7 @@ export default function MainPage() {
                       <div 
                         key={post.id} 
                         className="group cursor-pointer"
-                        onClick={() => router.push(`/post/${post.id}`)}
+                        onClick={() => router.push(`/post/${createPostSlug(post.title, post.id)}`)}
                       >
                         <div className="flex gap-3">
                           <Show when={!!post.cover}>

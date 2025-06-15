@@ -39,3 +39,14 @@ export async function createTag(name: string) {
   }
   return response;
 }
+
+export async function deleteTag(tagId: string) {
+  const request = ky.delete(`${API_URL}/tag/${tagId}`, {
+    credentials: "include",
+  }).json();
+  const [response, error] = await resolveRequest(request);
+  if (error) {
+    throw error;
+  }
+  return response;
+}

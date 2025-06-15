@@ -5,28 +5,28 @@ import ListView from "@/components/layouts/ListView";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Show from "@/components/wrappers/Show";
-import { getDraftPosts } from "@/lib/api/requests/post";
-import { Grid, ListTree, Plus, FileText, Clock } from "lucide-react";
+import { getArchivedPosts } from "@/lib/api/requests/post";
+import { Grid, ListTree, Archive, FileText, Plus } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Spinner } from "@/components/ui/Spinner";
 
-export default function DraftsPage() {
+export default function ArchivedPage() {
   const [skip, setSkip] = useState(0);
   const [limit, setLimit] = useState(10);
   const [postsOrientation, setPostsOrientation] = useState<"grid" | "list">(
     "grid",
   );
 
-  const { data: draftPosts = [], isLoading, error, isFetching } = useQuery({
-    queryKey: ["posts", "drafts", skip, limit],
-    queryFn: () => getDraftPosts({ skip, limit }),
+  const { data: archivedPosts = [], isLoading, error, isFetching } = useQuery({
+    queryKey: ["posts", "archived", skip, limit],
+    queryFn: () => getArchivedPosts({ skip, limit }),
   });
   
   // Calculate pagination values
   const currentPage = Math.floor(skip / limit) + 1;
-  const hasMore = draftPosts.length === limit;
+  const hasMore = archivedPosts.length === limit;
   
   // Handle pagination
   const goToNextPage = () => {
@@ -49,8 +49,8 @@ export default function DraftsPage() {
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center p-8">
-        <h2 className="text-xl font-semibold mb-2">Error Loading Drafts</h2>
-        <p className="text-muted-foreground">Failed to load draft posts. Please try again.</p>
+        <h2 className="text-xl font-semibold mb-2">Error Loading Archived Posts</h2>
+        <p className="text-muted-foreground">Failed to load archived posts. Please try again.</p>
       </div>
     );
   }
@@ -60,14 +60,14 @@ export default function DraftsPage() {
       <div className="flex items-center justify-between p-4">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
-            <Clock className="w-5 h-5 text-muted-foreground" />
-            <span className="font-semibold text-xl">Draft Posts</span>
+            <Archive className="w-5 h-5 text-muted-foreground" />
+            <span className="font-semibold text-xl">Archived Posts</span>
           </div>
           <div className="flex items-center gap-2 text-sm">
-            <Badge variant="outline">Total: {draftPosts.length}</Badge>
+            <Badge variant="outline">Total: {archivedPosts.length}</Badge>
             <Badge variant="secondary" className="flex items-center gap-1">
-              <FileText className="w-3 h-3" />
-              Unpublished
+              <Archive className="w-3 h-3" />
+              Archived
             </Badge>
           </div>
         </div>
@@ -76,7 +76,7 @@ export default function DraftsPage() {
           <Link href="/admin/posts/new">
             <Button className="flex items-center gap-2">
               <Plus className="w-4 h-4" />
-              New Draft
+              New Post
             </Button>
           </Link>
           <Button
@@ -97,24 +97,24 @@ export default function DraftsPage() {
         </div>
       </Show>
 
-      <Show when={!isLoading && draftPosts.length === 0}>
+      <Show when={!isLoading && archivedPosts.length === 0}>
         <div className="flex flex-col items-center justify-center py-20">
-          <Clock className="w-16 h-16 text-muted-foreground mb-4" />
-          <h3 className="text-xl font-semibold mb-2">No Drafts Yet</h3>
-          <p className="text-muted-foreground mb-4">Start writing your next blog post!</p>
-          <Link href="/admin/posts/new">
-            <Button>
-              <Plus className="w-4 h-4 mr-2" />
-              Create New Post
+          <Archive className="w-16 h-16 text-muted-foreground mb-4" />
+          <h3 className="text-xl font-semibold mb-2">No Archived Posts</h3>
+          <p className="text-muted-foreground mb-4">Posts you archive will appear here.</p>
+          <Link href="/admin">
+            <Button variant="outline">
+              <FileText className="w-4 h-4 mr-2" />
+              View All Posts
             </Button>
           </Link>
         </div>
       </Show>
 
-      <Show when={!isLoading && draftPosts.length > 0}>
+      <Show when={!isLoading && archivedPosts.length > 0}>
         <Show when={postsOrientation === "grid"}>
           <GridView className="gap-2 px-2">
-            {draftPosts.map((post) => (
+            {archivedPosts.map((post) => (
               <Link href={`/admin/posts/${post.id}`} key={post.id}>
                 <AdminPostCard
                   orientation={postsOrientation}
@@ -129,7 +129,7 @@ export default function DraftsPage() {
         
         <Show when={postsOrientation === "list"}>
           <ListView gap={2} className="px-2">
-            {draftPosts.map((post) => (
+            {archivedPosts.map((post) => (
               <Link href={`/admin/posts/${post.id}`} key={post.id}>
                 <AdminPostCard
                   orientation={postsOrientation}
@@ -142,9 +142,9 @@ export default function DraftsPage() {
           </ListView>
         </Show>
       </Show>
-
+      
       {/* Pagination */}
-      <Show when={!isLoading && draftPosts.length > 0}>
+      <Show when={!isLoading && archivedPosts.length > 0}>
         <div className="flex items-center justify-between px-4 py-6">
           <div className="flex items-center gap-2">
             <span className="text-sm text-muted-foreground">Page Size:</span>

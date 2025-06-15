@@ -70,13 +70,13 @@ export default function Login() {
                 <CheckCircle className="h-4 w-4 text-green-600" />
                 <AlertTitle className="text-green-800">Success!</AlertTitle>
                 <AlertDescription className="text-green-700">
-                  Check your email for a login link. We've sent you a secure link to access your account.
+                  Check your email for a login link. We&apos;ve sent you a secure link to access your account.
                 </AlertDescription>
               </Alert>
             ) : null}
             <CardTitle className="cursor-default">Welcome back</CardTitle>
             <CardDescription>
-              Enter your email address and we'll send you a secure login link.
+              Enter your email address and we&apos;ll send you a secure login link.
             </CardDescription>
           </CardHeader>
           <CardContent className="grid gap-y-4">
@@ -108,7 +108,7 @@ export default function Login() {
               </Button>
               <Button variant="link" size="sm" asChild>
                 <Link href="/register">
-                  Don't have an account? Sign up
+                  Don&apos;t have an account? Sign up
                 </Link>
               </Button>
             </div>

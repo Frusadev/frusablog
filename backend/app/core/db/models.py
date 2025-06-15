@@ -141,7 +141,7 @@ class Comment(SQLModel, table=True):
             created_at=self.created_at,
             children=[child.to_dto() for child in self.children],
             author=self.author.to_dto(),
-            parent=self.parent.to_dto(),
+            parent_id=self.parent_id,
             level=self.level,
         )
 
@@ -174,17 +174,17 @@ class ViewAction(SQLModel, table=True):
         default_factory=lambda: datetime.now(timezone.utc)
     )
     post: Post = Relationship(back_populates="views")
-    view_time: int = 5  # in seconds
+    view_time: int = 0  # in seconds
 
 
 class VisitAction(SQLModel, table=True):
-    id: UUID = Field(default_factory=uuid.uuid4, primary_key=True)
-    user_id: str | None = Field(foreign_key="user.id")
+    id: str = Field(default_factory=gen_id, primary_key=True)
+    user_id: str | None = Field(foreign_key="user.id", default=None)
     created_at: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc)
     )
     user: User | None = Relationship(back_populates="visits")
-    visit_time: int = 5  # in seconds
+    visit_time: int = 0  # in seconds
 
 
 class Role(SQLModel, table=True):

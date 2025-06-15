@@ -3,7 +3,17 @@ import "@/app/globals.css";
 import AdminGuard from "@/components/wrappers/AdminGuard";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import AdminSidebar from "@/components/ui/custom/AdminSidebar";
-import { ChartLine, Newspaper, Pencil, PlusCircle, Timer } from "lucide-react";
+import {
+  ChartLine,
+  Newspaper,
+  Pencil,
+  PlusCircle,
+  Timer,
+  Archive,
+  Tags,
+  MessageSquare,
+} from "lucide-react";
+import { Toaster } from "sonner";
 
 const description = `
 Stay ahead in the ever-evolving world of technology with tutorials, coding tips, software reviews, dev stories, and deep dives into AI, web dev, open-source, and more.
@@ -46,22 +56,38 @@ export default function RootLayout({
                     icon: <Timer />,
                   },
                   {
+                    label: "Archived",
+                    href: "/admin/posts/archived",
+                    icon: <Archive />,
+                  },
+                  {
                     label: "Stats",
                     href: "/admin/posts/stats",
                     icon: <ChartLine />,
                   },
                 ],
               },
+              {
+                label: "Tags",
+                href: "/admin/tags",
+                icon: <Tags />,
+              },
+              {
+                label: "Comments",
+                href: "/admin/comments",
+                icon: <MessageSquare />,
+              },
             ]}
           />
-          <div className="w-full h-screen p-4 bg-sidebar">
-            <div className="rounded-md border w-full h-full bg-background">
+          <div className="w-full min-h-screen p-4 bg-sidebar">
+            <div className="rounded-md border w-full min-h-full bg-background">
               <SidebarTrigger />
               {children}
             </div>
           </div>
         </SidebarProvider>
       </AdminGuard>
+      <Toaster />
     </main>
   );
 }

@@ -43,7 +43,7 @@ export default function AuthenticatePage() {
         router.push("/admin");
       }, 3000);
     },
-    onError: (err: any) => {
+    onError: (err: Error) => {
       setError(err.message || "Authentication failed. Please try again.");
     },
   });
@@ -52,7 +52,7 @@ export default function AuthenticatePage() {
     if (authSessionId) {
       authenticateMutation.mutate(authSessionId);
     }
-  }, [authSessionId]);
+  }, [authSessionId, authenticateMutation]);
 
   const isLoading = authenticateMutation.isPending;
   const isSuccess = authenticateMutation.isSuccess;

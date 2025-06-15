@@ -18,7 +18,7 @@ export function Authenticated({
     if (isError) {
       router.push(redirect ?? "/auth/login");
     }
-  }, [isError]);
+  }, [isError, router, redirect]);
   if (isSuccess) {
     return children;
   } else {
@@ -40,7 +40,7 @@ export function Unauthenticated({
     if (isSuccess) {
       router.push(redirect ?? "/login");
     }
-  }, [isSuccess]);
+  }, [isSuccess, router, redirect]);
   if (isError) {
     return children;
   } else {

@@ -2,9 +2,8 @@ import { Post } from "@/lib/api/dto/post";
 import { toggleFeaturedPost } from "@/lib/api/requests/post";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Star } from "lucide-react";
 import { useState } from "react";
+import { Star } from "lucide-react";
 import Show from "@/components/wrappers/Show";
 import PostCard, { PostCardProps } from "./PostCard";
 

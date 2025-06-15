@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Input } from "../input";
 import { useEffect, useState } from "react";
 import { searchPosts } from "@/lib/api/requests/post";
+import type { Post } from "@/lib/api/dto/post";
 
 export default function PostSearch({
   setPosts,
@@ -12,7 +13,7 @@ export default function PostSearch({
   skip,
   limit,
 }: {
-  setPosts: (posts: any[]) => void;
+  setPosts: (posts: Post[]) => void;
   skip?: number;
   limit?: number;
   setLoading: (loading: boolean) => void;
@@ -37,14 +38,14 @@ export default function PostSearch({
   });
   useEffect(() => {
     setLoading(searchQuery.isLoading);
-  }, [searchQuery.isLoading]);
+  }, [searchQuery.isLoading, setLoading]);
   useEffect(() => {
     setIsSuccess(searchQuery.isSuccess);
     setPosts(searchQuery.data ?? []);
-  }, [searchQuery.isSuccess, searchQuery.data]);
+  }, [searchQuery.isSuccess, searchQuery.data, setIsSuccess, setPosts]);
   useEffect(() => {
     setIsError(searchQuery.isError);
-  }, [searchQuery.isError]);
+  }, [searchQuery.isError, setIsError]);
 
   return (
     <div className="w-2/3 max-w-[500px] flex gap-2">

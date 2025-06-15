@@ -13,7 +13,11 @@ from app.api.routes.v1.dto.post import (
 from app.api.routes.v1.providers import post as post_provider
 from app.api.routes.v1.providers.auth.email import get_current_user
 from app.api.routes.v1.providers.user import get_optional_current_user
-from app.core.db.models import User
+from app.api.routes.v1.providers.user_action import (
+    view_dependency,
+    visit_dependency,
+)
+from app.core.db.models import User, ViewAction, VisitAction
 from app.core.db.setup import create_db_session
 
 post_router = APIRouter(prefix="/v1")
@@ -27,6 +31,7 @@ async def get_post(
     db_session: DBSessionDependency,
     post_id: UUID,
     current_user: Annotated[User | None, Depends(get_optional_current_user)],
+    _: Annotated[ViewAction, Depends(view_dependency)],
 ):
     return await post_provider.get_post(
         db_session=db_session, id=post_id, current_user=current_user
@@ -36,8 +41,9 @@ async def get_post(
 @post_router.get("/posts", response_model=list[PostDTO])
 async def get_posts(
     db_session: DBSessionDependency,
+    _: Annotated[VisitAction, Depends(visit_dependency)],
     skip: Annotated[int, Query(ge=0)] = 0,
-    limit: Annotated[int, Query(le=10)] = 10,
+    limit: Annotated[int, Query(le=100)] = 10,
 ):
     return await post_provider.get_posts(
         db_session=db_session, skip=skip, limit=limit
