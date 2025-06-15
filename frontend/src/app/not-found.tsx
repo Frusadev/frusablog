@@ -22,7 +22,7 @@ export default function NotFound() {
         </h2>
         
         <p className="text-muted-foreground mb-8 leading-relaxed">
-          Sorry, we couldn't find the page you're looking for. The page might have been moved, deleted, or you entered the wrong URL.
+          Sorry, we couldn&apos;t find the page you&apos;re looking for. The page might have been moved, deleted, or you entered the wrong URL.
         </p>
         
         <div className="space-y-4">
