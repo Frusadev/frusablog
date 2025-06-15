@@ -1,7 +1,7 @@
 import { API_URL } from "@/lib/config/env";
 import ky from "ky";
 import { resolveRequest } from "../utils";
-import type { Post, PostUpdateDTO } from "../dto/post";
+import type { Post, PostUpdateDTO, PostCreationDTO } from "../dto/post";
 
 export async function searchPosts({
   query,
@@ -135,6 +135,75 @@ export async function getPost(postId: string) {
   const [response, error] = await resolveRequest(request);
   if (error) {
     throw error;
+  }
+  return response;
+}
+
+export async function getDraftPosts({
+  skip = 0,
+  limit = 10,
+}: {
+  skip?: number;
+  limit?: number;
+} = {}) {
+  const request = ky
+    .get<Post[]>(`${API_URL}/posts/drafts`, {
+      searchParams: {
+        skip: skip,
+        limit: limit,
+      },
+      credentials: "include",
+    })
+    .json();
+  const [response, error] = await resolveRequest(request);
+  if (error) {
+    throw error;
+  }
+  return response;
+}
+
+export async function getArchivedPosts({
+  skip = 0,
+  limit = 10,
+}: {
+  skip?: number;
+  limit?: number;
+} = {}) {
+  const request = ky
+    .get<Post[]>(`${API_URL}/posts/archived`, {
+      searchParams: {
+        skip: skip,
+        limit: limit,
+      },
+      credentials: "include",
+    })
+    .json();
+  const [response, error] = await resolveRequest(request);
+  if (error) {
+    throw error;
+  }
+  return response;
+}
+
+export async function createPost(data: PostCreationDTO) {
+  const request = ky.post<Post>(`${API_URL}/post`, {
+    json: data,
+    credentials: "include",
+  }).json();
+  const [response, error] = await resolveRequest(request);
+  if (error) {
+    throw new Error(error.detail);
+  }
+  return response;
+}
+
+export async function deletePost(postId: string) {
+  const request = ky.delete(`${API_URL}/post/${postId}`, {
+    credentials: "include",
+  }).json();
+  const [response, error] = await resolveRequest(request);
+  if (error) {
+    throw new Error(error.detail);
   }
   return response;
 }

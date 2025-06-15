@@ -30,7 +30,7 @@ export default function AdminSidebar({ links }: { links?: SidebarLink[] }) {
         {links?.map((link, i) => {
           if (link.subLinks?.length ?? 0 > 0) {
             return (
-              <SidebarGroup>
+              <SidebarGroup key={i}>
                 <SidebarGroupLabel className="cursor-default">{link.label}</SidebarGroupLabel>
                 <SidebarGroupContent>
                   <SidebarMenu>
@@ -52,8 +52,8 @@ export default function AdminSidebar({ links }: { links?: SidebarLink[] }) {
             );
           }
           return (
-            <SidebarMenu>
-              <SidebarMenuItem key={i}>
+            <SidebarMenu key={i}>
+              <SidebarMenuItem>
                 <SidebarMenuButton asChild>
                   <a href={link.href}>
                     {link.icon}

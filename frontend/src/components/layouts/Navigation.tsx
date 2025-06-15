@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import ThemeSwitch from "@/components/ui/custom/ThemeSwitch";
 import { 
@@ -116,7 +115,7 @@ I'm Daniel and I'm just getting started.`;
                     Get in Touch
                   </DialogTitle>
                   <DialogDescription>
-                    Let's connect and build something amazing together
+                    Let&apos;s connect and build something amazing together
                   </DialogDescription>
                 </DialogHeader>
                 <div className="mt-4 space-y-4">

@@ -2,7 +2,7 @@
 import { useTheme } from "next-themes";
 import { Button } from "../button";
 import Show from "@/components/wrappers/Show";
-import { MoonStar, Sun, Sunrise } from "lucide-react";
+import { MoonStar, Sun } from "lucide-react";
 
 export default function ThemeSwitch() {
   const { theme, setTheme } = useTheme();

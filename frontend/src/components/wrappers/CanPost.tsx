@@ -17,7 +17,7 @@ export default function CanPost({children, redirect}: {children?: ReactNode, red
     if (isError) {
       router.push(redirect ?? "/auth/login");
     }
-  }, [isError]);
+  }, [isError, router, redirect]);
   if (isSuccess) {
     return children;
   } else {
