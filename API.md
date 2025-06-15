@@ -441,7 +441,7 @@ interface Comment {
   created_at: string // ISO 8601
   author: User
   children: Comment[]
-  parent?: Comment
+  parent_id: string | null // Parent comment ID (null for top-level)
   level: number // 0 for top-level, 1 for replies
 }
 ```

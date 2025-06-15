@@ -416,7 +416,7 @@ interface Comment {
   created_at: string;
   author: User;
   children: Comment[];
-  parent?: string;
+  parent_id: string | null;
   level: number;
 }
 ```
