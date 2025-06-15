@@ -18,6 +18,7 @@ FILE_RESOURCE = "file"
 INFOFIELD_RESOURCE = "info_field"
 COMMENT_RESOURCE = "comment"
 TAG_RESOURCE = "tag"
+STAT_RESOURCE = "stat"
 
 ACTION_CREATE = "create"
 ACTION_READ = "read"

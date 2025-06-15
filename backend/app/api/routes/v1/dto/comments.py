@@ -18,7 +18,7 @@ class CommentDTO(BaseModel):
     created_at: datetime
     author: UserDTO
     children: list["CommentDTO"]
-    parent: "CommentDTO"
+    parent_id: UUID | None
     level: int
 
 

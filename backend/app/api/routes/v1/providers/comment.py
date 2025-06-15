@@ -1,7 +1,7 @@
 from uuid import UUID
 
 from fastapi.exceptions import HTTPException
-from sqlmodel import Session, select
+from sqlmodel import Session, desc, select
 from starlette.status import HTTP_403_FORBIDDEN
 
 from app.api.routes.v1.dto.comments import (
@@ -13,10 +13,8 @@ from app.core.db.builders.permission import PermissionBuilder
 from app.core.db.models import Comment, Post, Role, User
 from app.core.security.checkers import check_existence
 from app.core.security.permissions import (
-    ACTION_CREATE,
     ACTION_READWRITE,
     COMMENT_RESOURCE,
-    GlobalPermissionCheckModel,
     PermissionChecker,
     PermissionCheckModel,
 )
@@ -25,20 +23,6 @@ from app.core.security.permissions import (
 async def create_comment(
     db_session: Session, current_user: User, data: CommentCreationDTO
 ):
-    PermissionChecker(
-        db_session=db_session,
-        roles=current_user.roles,
-        bypass_role="admin",
-        pcheck_models=[
-            GlobalPermissionCheckModel(
-                resource_name=COMMENT_RESOURCE, action_names=[ACTION_CREATE]
-            ),
-            GlobalPermissionCheckModel(
-                resource_name=COMMENT_RESOURCE, action_names=[ACTION_READWRITE]
-            ),
-        ],
-    ).check(either=True)
-
     post = check_existence(db_session.get(Post, data.post_id))
 
     comment = Comment(
@@ -46,15 +30,18 @@ async def create_comment(
         post_id=post.id,
         user_id=current_user.id,
     )
-    parent_comment: Comment | None = db_session.get(Comment, data.parent_id)
+    if data.parent_id is not None:
+        parent_comment: Comment | None = db_session.get(
+            Comment, data.parent_id
+        )
 
-    if parent_comment is not None:
-        if parent_comment.level > 0:
-            raise HTTPException(
-                status_code=HTTP_403_FORBIDDEN,
-                detail="Comment level too high.",
-            )
-        comment.parent_id = parent_comment.id
+        if parent_comment is not None:
+            if parent_comment.level > 0:
+                raise HTTPException(
+                    status_code=HTTP_403_FORBIDDEN,
+                    detail="Comment level too high.",
+                )
+            comment.parent_id = parent_comment.id
     rw_role = Role(users=[current_user])
     rw_permission = (
         PermissionBuilder()
@@ -132,6 +119,7 @@ async def get_comments(
     comments = db_session.exec(
         select(Comment)
         .where(Comment.post_id == post_id)
+        .order_by(desc(Comment.created_at))
         .offset(skip)
         .limit(limit)
     )
