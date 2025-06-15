@@ -19,7 +19,7 @@ export interface Post {
 export interface PostCreationDTO {
   title: string;
   description: string;
-  cover?: string;
+  cover?: string | null;
   content: string;
   published: boolean;
   tags: Tag[];
@@ -29,7 +29,7 @@ export interface PostUpdateDTO {
   id: string;
   title: string;
   description: string;
-  cover?: string;
+  cover?: string | null;
   content: string;
   published: boolean;
   archived: boolean;

@@ -104,8 +104,16 @@ async def edit_post(
 
 async def like_post(db_session: Session, current_user: User, post_id: UUID):
     post = check_existence(db_session.get(Post, post_id))
-    inc = 1 if current_user not in post.liked_by else -1
-    post.likes += inc
+    inc = (
+        1 if current_user.id not in [user.id for user in post.liked_by] else -1
+    )
+
+    if inc == -1:
+        post.liked_by.remove(current_user)
+    else:
+        post.liked_by.append(current_user)
+
+    post.likes = post.likes + inc
     db_session.add(post)
     db_session.commit()
     db_session.refresh(post)

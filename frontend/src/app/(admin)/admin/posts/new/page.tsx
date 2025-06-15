@@ -144,7 +144,7 @@ export default function NewPostPage() {
       return;
     }
 
-    let coverId = "";
+    let coverId = null;
 
     // If uploadMutation is still in progress, wait for it to complete
     if (uploadMutation.isPending && coverFile) {

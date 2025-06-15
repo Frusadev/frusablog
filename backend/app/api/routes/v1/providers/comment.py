@@ -85,7 +85,17 @@ async def like_comment(
     db_session: Session, current_user: User, comment_id: UUID
 ):
     comment = check_existence(db_session.get(Comment, comment_id))
-    inc = 1 if current_user not in comment.liked_by else -1
+    db_session.refresh(comment, attribute_names=["liked_by"])
+    inc = (
+        1
+        if current_user.id not in [user.id for user in comment.liked_by]
+        else -1
+    )
+    if inc == -1:
+        comment.liked_by.remove(current_user)
+    else:
+        comment.liked_by.append(current_user)
+
     comment.likes += inc
     db_session.add(comment)
     db_session.commit()
