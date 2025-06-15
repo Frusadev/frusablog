@@ -184,7 +184,7 @@ export default function PostEditPage() {
       id: postId,
       title,
       description,
-      cover: coverId || "",
+      cover: coverId || null,
       content,
       published,
       archived,
