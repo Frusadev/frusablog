@@ -4,7 +4,7 @@ import GridView from "@/components/layouts/GridView";
 import ListView from "@/components/layouts/ListView";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import PostSearch from "@/components/ui/custom/PostSearch";
+import AdminPostSearch from "@/components/ui/custom/AdminPostSearch";
 import Show from "@/components/wrappers/Show";
 import { Post } from "@/lib/api/dto/post";
 import { Star, Grid, ListTree } from "lucide-react";
@@ -48,7 +48,7 @@ export default function AdminPage() {
           </div>
         </div>
         <div className="w-2/3 max-w-[500px] flex gap-2">
-          <PostSearch
+          <AdminPostSearch
             setPosts={setQueriedPosts}
             setLoading={setLoadingQueriedPosts}
             setIsError={setIsErrorQueryingPosts}
