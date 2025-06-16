@@ -3,7 +3,6 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import QueryProvider from "@/components/providers/QueryProvider";
 import { Toaster } from "sonner";
-
 const description = `
 Stay ahead in the ever-evolving world of technology with tutorials, coding tips, software reviews, dev stories, and deep dives into AI, web dev, open-source, and more.
 `;
