@@ -25,12 +25,13 @@ from app.core.services import storage
 
 
 async def get_file_resource(
-    db_session: Session, user: User, resource_id: UUID
+    db_session: Session, current_user: User | None, resource_id: UUID
 ):
     resource = check_existence(
         db_session.get(FileResource, resource_id), detail="File not found."
     )
     if resource.protected is True:
+        user = check_existence(current_user)
         PermissionChecker(
             roles=user.roles,
             db_session=db_session,
