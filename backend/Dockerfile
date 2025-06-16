@@ -1,40 +1,45 @@
-FROM fedora:42 AS builder
+# syntax=docker/dockerfile:1.6   # enables BuildKit cache mounts
 
+########################
+# ---- Build stage ----
+########################
+FROM python:3.13-slim-bookworm AS builder
 
-RUN dnf install -y python3 python3-pip git && \
-    pip3 install uv && \
-    dnf install -y gcc g++
+# 1. System deps (build‑only)
+RUN pip3 install --no-cache-dir uv
 
-
+# 2. Non‑root user
 RUN useradd -m runner
 USER runner
 WORKDIR /home/runner/app
 
-COPY --chown=runner:runner ./pyproject.toml ./uv.lock ./
+# 3. Virtual‑env lives in /opt/venv so it’s easy to copy
+RUN python3 -m venv .venv
 
-# Install dependencies
-RUN python3 -m venv .venv && \
-    .venv/bin/python -m pip install --upgrade pip && \
-    uv sync
+# 4. Copy *only* lock / metadata first → better cache
+COPY --chown=runner:runner pyproject.toml uv.lock ./
 
+# 5. Install deps (optionally cache the wheelhouse)
+#    Uncomment the --mount line if you build with BuildKit
+RUN uv sync
+
+# 6. Copy the rest of the source
 COPY --chown=runner:runner . .
 
-# Final production stage
-FROM fedora:42 AS production
+############################
+# ---- Runtime stage ----
+############################
+FROM python:3.13-slim-bookworm AS production
+RUN pip install uv
 
-# Install system dependencies
-RUN dnf install -y python3
-
-# Create user and working dir
+# 2. Non‑root runtime user
 RUN useradd -m runner
 USER runner
 WORKDIR /home/runner/app
 
-# Copy app from builder
-COPY --from=builder /home/runner/app /home/runner/app
+# 3. Copy application code *and* ready‑made venv
+COPY --from=builder --chown=runner:runner /home/runner/app /home/runner/app
+RUN pip install --upgrade pip
 
-# Expose port
 EXPOSE 8000
-
-# Run app
-CMD [".venv/bin/python", "main.py"]
+CMD ["uv", "run", "main.py"]
