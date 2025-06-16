@@ -33,14 +33,15 @@ export default function AuthenticatePage() {
   
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [hasAttempted, setHasAttempted] = useState(false);
 
   const authenticateMutation = useMutation({
     mutationFn: authenticate,
     onSuccess: () => {
       setShowSuccessDialog(true);
-      // Redirect to dashboard after 3 seconds
+      // Redirect to main page after 3 seconds
       setTimeout(() => {
-        router.push("/admin");
+        router.push("/");
       }, 3000);
     },
     onError: (err: Error) => {
@@ -49,10 +50,11 @@ export default function AuthenticatePage() {
   });
 
   useEffect(() => {
-    if (authSessionId) {
+    if (authSessionId && !hasAttempted) {
+      setHasAttempted(true);
       authenticateMutation.mutate(authSessionId);
     }
-  }, [authSessionId, authenticateMutation]);
+  }, [authSessionId]); // Remove authenticateMutation from dependencies to prevent multiple requests
 
   const isLoading = authenticateMutation.isPending;
   const isSuccess = authenticateMutation.isSuccess;
@@ -86,7 +88,7 @@ export default function AuthenticatePage() {
                   ? "Please wait while we verify your login link."
                   : error 
                     ? "The login link may have expired or is invalid."
-                    : "Redirecting you to your dashboard..."
+                    : "Redirecting you to the main page..."
                 }
               </CardDescription>
             </CardHeader>
@@ -109,7 +111,7 @@ export default function AuthenticatePage() {
                       Successfully authenticated!
                     </p>
                     <p className="text-xs text-muted-foreground text-center">
-                      Redirecting to dashboard in 3 seconds...
+                      Redirecting to main page in 3 seconds...
                     </p>
                   </div>
                 )}
@@ -157,7 +159,7 @@ export default function AuthenticatePage() {
             </SheetTitle>
             <SheetDescription className="text-center text-muted-foreground">
               You have been successfully logged in to your account. 
-              You&apos;re being redirected to your dashboard.
+              You&apos;re being redirected to the main page.
             </SheetDescription>
           </SheetHeader>
           
@@ -173,10 +175,10 @@ export default function AuthenticatePage() {
             </div>
             
             <Button 
-              onClick={() => router.push("/admin")} 
+              onClick={() => router.push("/")} 
               className="w-full bg-green-600 hover:bg-green-700"
             >
-              Go to Dashboard
+              Go to Home
             </Button>
             
             <Button 
