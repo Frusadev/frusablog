@@ -103,6 +103,38 @@ async def search_posts(
     )
 
 
+@post_router.get("/posts/all", response_model=list[PostDTO])
+async def get_all_posts(
+    db_session: DBSessionDependency,
+    current_user: CurrentUserDependency,
+    skip: Annotated[int, Query(ge=0)] = 0,
+    limit: Annotated[int, Query(le=100)] = 10,
+):
+    return await post_provider.get_all_posts(
+        db_session=db_session,
+        current_user=current_user,
+        skip=skip,
+        limit=limit,
+    )
+
+
+@post_router.get("/posts/search/all", response_model=list[PostDTO])
+async def search_all_posts(
+    db_session: DBSessionDependency,
+    current_user: CurrentUserDependency,
+    query: str,
+    skip: Annotated[int, Query(ge=0)] = 0,
+    limit: Annotated[int, Query(le=50)] = 50,
+):
+    return await post_provider.search_all_posts(
+        db_session=db_session,
+        current_user=current_user,
+        query=query,
+        skip=skip,
+        limit=limit,
+    )
+
+
 @post_router.post("/post", response_model=PostDTO)
 async def create_post(
     db_session: DBSessionDependency,
