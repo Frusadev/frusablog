@@ -34,6 +34,7 @@ services:
       - EMAIL_TEMPLATES_PATH=${EMAIL_TEMPLATES_PATH}
       - BACKEND_URL=${BACKEND_URL}
       - FRONTEND_URL=${FRONTEND_URL}
+      - ADMIN_EMAIL=${ADMIN_EMAIL}
 
   db:
     image: postgres:17
