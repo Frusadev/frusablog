@@ -3,32 +3,6 @@ import ky from "ky";
 import { resolveRequest } from "../utils";
 import type { Post, PostUpdateDTO, PostCreationDTO } from "../dto/post";
 
-export async function searchPosts({
-  query,
-  skip,
-  limit,
-}: {
-  query: string;
-  skip: number;
-  limit: number;
-}) {
-  const request = ky
-    .get<Post[]>(`${API_URL}/posts/search`, {
-      searchParams: {
-        query: query,
-        skip: skip,
-        limit: limit,
-      },
-      credentials: "include",
-    })
-    .json();
-  const [response, error] = await resolveRequest(request);
-  if (error) {
-    throw error;
-  }
-  return response;
-}
-
 export async function updatePost(data: PostUpdateDTO) {
   const request = ky.put<Post>(`${API_URL}/post`, {
     json: data,
@@ -204,6 +178,81 @@ export async function deletePost(postId: string) {
   const [response, error] = await resolveRequest(request);
   if (error) {
     throw new Error(error.detail);
+  }
+  return response;
+}
+
+export async function searchPosts({
+  query,
+  skip,
+  limit,
+}: {
+  query: string;
+  skip: number;
+  limit: number;
+}) {
+  const request = ky
+    .get<Post[]>(`${API_URL}/posts/search`, {
+      searchParams: {
+        query: query,
+        skip: skip,
+        limit: limit,
+      },
+      credentials: "include",
+    })
+    .json();
+  const [response, error] = await resolveRequest(request);
+  if (error) {
+    throw error;
+  }
+  return response;
+}
+
+export async function getAllPosts({
+  skip = 0,
+  limit = 10,
+}: {
+  skip?: number;
+  limit?: number;
+} = {}) {
+  const request = ky
+    .get<Post[]>(`${API_URL}/posts/all`, {
+      searchParams: {
+        skip: skip,
+        limit: limit,
+      },
+      credentials: "include",
+    })
+    .json();
+  const [response, error] = await resolveRequest(request);
+  if (error) {
+    throw error;
+  }
+  return response;
+}
+
+export async function searchAllPosts({
+  query,
+  skip,
+  limit,
+}: {
+  query: string;
+  skip: number;
+  limit: number;
+}) {
+  const request = ky
+    .get<Post[]>(`${API_URL}/posts/search/all`, {
+      searchParams: {
+        query: query,
+        skip: skip,
+        limit: limit,
+      },
+      credentials: "include",
+    })
+    .json();
+  const [response, error] = await resolveRequest(request);
+  if (error) {
+    throw error;
   }
   return response;
 }
