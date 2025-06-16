@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getPost } from "@/lib/api/requests/post";
+import { getPost, likePost } from "@/lib/api/requests/post";
 import { getPostComments, createComment, likeComment, deleteComment } from "@/lib/api/requests/comment";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -38,6 +38,10 @@ export default function PostView() {
   const [newComment, setNewComment] = useState("");
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [replyContent, setReplyContent] = useState("");
+  
+  // State for post likes
+  const [localLikes, setLocalLikes] = useState(0);
+  const [isLiked, setIsLiked] = useState(false);
 
   // Initialize view tracking for this post
   useViewTracking();
@@ -56,6 +60,36 @@ export default function PostView() {
     queryKey: ["comments", postId],
     queryFn: () => getPostComments({ postId }),
     enabled: !!postId,
+  });
+
+  // Update local likes when post data changes
+  useEffect(() => {
+    if (post) {
+      setLocalLikes(post.likes);
+    }
+  }, [post]);
+
+  // Like post mutation
+  const likePostMutation = useMutation({
+    mutationFn: () => likePost(postId),
+    onMutate: async () => {
+      // Optimistic update
+      setIsLiked(true);
+      setLocalLikes(prev => prev + 1);
+    },
+    onSuccess: (data) => {
+      setLocalLikes(data.likes);
+      // Invalidate and refetch post data
+      queryClient.invalidateQueries({ queryKey: ["post", postId] });
+      queryClient.invalidateQueries({ queryKey: ["posts"] });
+      queryClient.invalidateQueries({ queryKey: ["featured-posts"] });
+    },
+    onError: () => {
+      // Revert optimistic update
+      setIsLiked(false);
+      setLocalLikes(post?.likes || 0);
+      toast.error("Failed to like post. Please try again.");
+    },
   });
 
   // Create comment mutation
@@ -142,6 +176,15 @@ export default function PostView() {
       return;
     }
     deleteCommentMutation.mutate(commentId);
+  };
+
+  const handleLikePost = () => {
+    if (!currentUser) {
+      toast.error("Please log in to like posts");
+      router.push("/login");
+      return;
+    }
+    likePostMutation.mutate();
   };
 
   if (isLoading) {
@@ -249,10 +292,21 @@ export default function PostView() {
               <Button
                 variant="ghost"
                 size="sm"
-                className="flex items-center gap-2 text-muted-foreground hover:text-red-500 transition-colors"
+                onClick={handleLikePost}
+                disabled={likePostMutation.isPending || isLiked}
+                className={`flex items-center gap-2 transition-colors ${
+                  isLiked 
+                    ? 'text-red-500 hover:text-red-600' 
+                    : 'text-muted-foreground hover:text-red-500'
+                }`}
               >
-                <Heart className="w-4 h-4" />
-                <span>{post.likes} likes</span>
+                <Show when={likePostMutation.isPending}>
+                  <Spinner size="small" className="w-4 h-4 stroke-current" />
+                </Show>
+                <Show when={!likePostMutation.isPending}>
+                  <Heart className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
+                </Show>
+                <span>{localLikes} likes</span>
               </Button>
               <ShareButton
                 title={post.title}
@@ -631,10 +685,21 @@ export default function PostView() {
               <Button
                 variant="ghost"
                 size="sm"
-                className="flex items-center gap-2 text-muted-foreground hover:text-red-500 transition-colors"
+                onClick={handleLikePost}
+                disabled={likePostMutation.isPending || isLiked}
+                className={`flex items-center gap-2 transition-colors ${
+                  isLiked 
+                    ? 'text-red-500 hover:text-red-600' 
+                    : 'text-muted-foreground hover:text-red-500'
+                }`}
               >
-                <Heart className="w-4 h-4" />
-                <span>{post.likes} likes</span>
+                <Show when={likePostMutation.isPending}>
+                  <Spinner size="small" className="w-4 h-4 stroke-current" />
+                </Show>
+                <Show when={!likePostMutation.isPending}>
+                  <Heart className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
+                </Show>
+                <span>{localLikes} likes</span>
               </Button>
               <ShareButton
                 title={post.title}

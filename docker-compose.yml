@@ -1,0 +1,50 @@
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_SERVER_URL=${NEXT_PUBLIC_SERVER_URL}
+        - NEXT_PUBLIC_API_VERSION=v1
+        - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_SERVER_URL=${NEXT_PUBLIC_SERVER_URL}
+      - NEXT_PUBLIC_API_VERSION=${NEXT_PUBLIC_API_VERSION}
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+    depends_on:
+      - backend
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    environment:
+      - DB_STRING=${DB_STRING}
+      - ALEMBIC_DB_URL=${ALEMBIC_DB_URL}
+      - DEBUG=${DEBUG}
+      - EMAIL_APP_PASSWORD=${EMAIL_APP_PASSWORD}
+      - APP_EMAIL_ADDRESS=${APP_EMAIL_ADDRESS}
+      - EMAIL_TEMPLATES_PATH=${EMAIL_TEMPLATES_PATH}
+      - BACKEND_URL=${BACKEND_URL}
+      - FRONTEND_URL=${FRONTEND_URL}
+
+  db:
+    image: postgres:17
+    environment:
+      - POSTGRES_USER=${PG_USER}
+      - POSTGRES_PASSWORD=${PG_PASSWORD}
+      - POSTGRES_DB=${PG_DATABASE}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+volumes:
+  postgres_data:

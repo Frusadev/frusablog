@@ -16,7 +16,7 @@ export function Authenticated({
 
   useEffect(() => {
     if (isError) {
-      router.push(redirect ?? "/auth/login");
+      router.push(redirect ?? "/login");
     }
   }, [isError, router, redirect]);
   if (isSuccess) {

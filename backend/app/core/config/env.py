@@ -13,7 +13,8 @@ EnvKey = Literal[
     "EMAIL_APP_PASSWORD",
     "DEBUG",
     "ALEMBIC_DB_URL",
-    "DB_STRING"
+    "DB_STRING",
+    "ADMIN_EMAIL"
 ]
 
 

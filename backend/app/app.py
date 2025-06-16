@@ -1,6 +1,7 @@
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.status import HTTP_404_NOT_FOUND
 
 from app.api.routes.v1.controllers.auth.auth import (
     auth_router as v1_auth_router,
@@ -43,8 +44,20 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-DEBUG = get_env("DEBUG", "True") == "True"
+DEBUG = get_env("DEBUG", "True") == "False"
 PORT = int(get_env("PORT", "8000")) or 8000
+
+
+@app.get("/redoc")
+async def redoc():
+    if not DEBUG:
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND)
+
+
+@app.get("/docs")
+async def openapidocs():
+    if not DEBUG:
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND)
 
 
 def run_app():

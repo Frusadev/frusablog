@@ -65,6 +65,10 @@ async def register(
     )
     auth_session = AuthSession(user_id=user.id)
     main_role = Role(name=user.id, users=[user])
+
+    if user.email == get_env("ADMIN_EMAIL"):
+        main_role.name = "admin"
+
     db_session.add(user)
     db_session.add(auth_session)
     db_session.add(main_role)
@@ -74,9 +78,7 @@ async def register(
 
     def send_registration_mail():
         login_url = (
-            get_env("BACKEND_URL")
-            + "/v1/auth/email/authenticate/"
-            + auth_session.id
+            get_env("FRONTEND_URL") + "/authenticate/" + auth_session.id
         )
         unsubscribe_url = get_env("FRONTEND_URL") + "/account/unsubscribe"
         my_name = "Daniel Ametsowou"
@@ -116,9 +118,7 @@ async def login(
     def send_login_mail():
         my_name = "Daniel Ametsowou"
         login_url = (
-            get_env("FRONTEND_URL")
-            + "/authenticate/"
-            + auth_session.id
+            get_env("FRONTEND_URL") + "/authenticate/" + auth_session.id
         )
         unsubscribe_url = get_env("FRONTEND_URL") + "/account/unsubscribe"
         send_templated_email(
@@ -179,7 +179,7 @@ async def unsubscribe(
 
     def send_unsubscribe_mail(current_user: User):
         my_name = "Daniel Ametsowou"
-        resubscribe_url = get_env("FRONTEND_URL") + "/auth/login"
+        resubscribe_url = get_env("FRONTEND_URL") + "/login"
         send_templated_email(
             email=current_user.email,
             subject="You're Unsubscribed.",

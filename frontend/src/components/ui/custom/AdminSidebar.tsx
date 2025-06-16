@@ -11,6 +11,9 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "../sidebar";
+import { Button } from "../button";
+import { ArrowLeft } from "lucide-react";
+import Link from "next/link";
 export interface SidebarLink {
   label: string;
   href: string;
@@ -22,8 +25,14 @@ export default function AdminSidebar({ links }: { links?: SidebarLink[] }) {
   return (
     <Sidebar className="border-none">
       <SidebarHeader>
-        <div className="flex w-full p-2">
+        <div className="flex flex-col w-full p-2 gap-2">
           <span className="font-semibold cursor-default">Dashboard</span>
+          <Link href="/">
+            <Button variant="outline" size="sm" className="w-full justify-start gap-2">
+              <ArrowLeft className="w-4 h-4" />
+              Back to Home
+            </Button>
+          </Link>
         </div>
       </SidebarHeader>
       <SidebarContent className="px-2">

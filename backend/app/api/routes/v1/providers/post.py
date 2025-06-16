@@ -155,6 +155,28 @@ async def get_posts(db_session: Session, skip: int, limit: int):
     return [post.to_dto() for post in posts]
 
 
+async def get_all_posts(
+    db_session: Session, current_user: User, skip: int, limit: int
+):
+    PermissionChecker(
+        db_session=db_session,
+        roles=current_user.roles,
+        bypass_role="admin",
+        pcheck_models=[
+            GlobalPermissionCheckModel(
+                resource_name=POST_RESOURCE, action_names=[ACTION_READWRITE]
+            ),
+            GlobalPermissionCheckModel(
+                resource_name=POST_RESOURCE, action_names=[ACTION_READ]
+            ),
+        ],
+    ).check(either=True)
+    posts = db_session.exec(
+        select(Post).offset(skip).limit(limit).order_by(desc(Post.created_at))
+    ).all()
+    return [post.to_dto() for post in posts]
+
+
 async def get_draft_posts(
     db_session: Session, current_user: User, skip: int, limit: int
 ):
@@ -181,7 +203,40 @@ async def search_posts(db_session: Session, query: str, skip: int, limit: int):
                 col(Post.title).ilike(f"%{query}%"),
                 col(Post.description).ilike(f"%{query}%"),
                 col(Post.content).ilike(f"%{query}%"),
-            )
+            ),
+            Post.archived == False,
+            Post.published == True,
+        )
+        .offset(skip)
+        .limit(limit)
+    ).all()
+    return [post.to_dto() for post in posts]
+
+
+async def search_all_posts(
+    db_session: Session, current_user: User, query: str, skip: int, limit: int
+):
+    PermissionChecker(
+        db_session=db_session,
+        roles=current_user.roles,
+        bypass_role="admin",
+        pcheck_models=[
+            GlobalPermissionCheckModel(
+                resource_name=POST_RESOURCE, action_names=[ACTION_READWRITE]
+            ),
+            GlobalPermissionCheckModel(
+                resource_name=POST_RESOURCE, action_names=[ACTION_READ]
+            ),
+        ],
+    ).check(either=True)
+    posts = db_session.exec(
+        select(Post)
+        .where(
+            or_(
+                col(Post.title).ilike(f"%{query}%"),
+                col(Post.description).ilike(f"%{query}%"),
+                col(Post.content).ilike(f"%{query}%"),
+            ),
         )
         .offset(skip)
         .limit(limit)

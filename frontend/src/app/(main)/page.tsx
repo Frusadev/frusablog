@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Spinner } from "@/components/ui/Spinner";
+import PostSearchInfinite from "@/components/ui/custom/PostSearchInfinite";
 import Show from "@/components/wrappers/Show";
 import { Star, TrendingUp, Calendar, User, Eye } from "lucide-react";
 import { timeAgo } from "@/lib/utils";
@@ -22,10 +23,10 @@ const POSTS_PER_PAGE = 8;
 export default function MainPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const router = useRouter();
-  
+
   // Initialize visit tracking for the main page
   useVisitTracking();
-  
+
   // Calculate skip value for pagination
   const skip = (currentPage - 1) * POSTS_PER_PAGE;
 
@@ -42,7 +43,7 @@ export default function MainPage() {
   });
 
   const handleLoadMore = () => {
-    setCurrentPage(prev => prev + 1);
+    setCurrentPage((prev) => prev + 1);
   };
 
   const featuredPosts = featuredQuery.data || [];
@@ -54,7 +55,15 @@ export default function MainPage() {
       <Navigation />
       <div className="min-h-screen bg-background">
         <div className="container mx-auto px-4 py-8 max-w-7xl">
-          {/* Header */}
+          {/* Header with Search */}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8">
+            <div className="flex items-center gap-2">
+              <h1 className="text-3xl font-bold">Welcome to the Blog</h1>
+            </div>
+            <div className="w-full sm:w-auto">
+              <PostSearchInfinite />
+            </div>
+          </div>
 
           {/* Main Layout */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -76,12 +85,14 @@ export default function MainPage() {
                   {posts.map((post) => (
                     <div
                       key={post.id}
-                      onClick={() => router.push(`/post/${createPostSlug(post.title, post.id)}`)}
+                      onClick={() =>
+                        router.push(
+                          `/post/${createPostSlug(post.title, post.id)}`,
+                        )
+                      }
                       className="cursor-pointer transform transition-transform hover:scale-[1.02]"
                     >
-                      <PostCard
-                        post={post}
-                      />
+                      <PostCard post={post} orientation="list" />
                     </div>
                   ))}
                 </div>
@@ -129,20 +140,27 @@ export default function MainPage() {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     {featuredPosts.slice(0, 3).map((post) => (
-                      <div 
-                        key={post.id} 
+                      <div
+                        key={post.id}
                         className="group cursor-pointer"
-                        onClick={() => router.push(`/post/${createPostSlug(post.title, post.id)}`)}
+                        onClick={() =>
+                          router.push(
+                            `/post/${createPostSlug(post.title, post.id)}`,
+                          )
+                        }
                       >
                         <div className="flex gap-3">
                           <Show when={!!post.cover}>
                             <div className="w-16 h-16 bg-muted rounded-lg flex-shrink-0 overflow-hidden">
                               <img
-                                src={getResourceUrl(post.cover) || "/nomedia.png"}
+                                src={
+                                  getResourceUrl(post.cover) || "/nomedia.png"
+                                }
                                 alt={post.title}
                                 className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-200"
                                 onError={(e) => {
-                                  (e.target as HTMLImageElement).src = "/nomedia.png";
+                                  (e.target as HTMLImageElement).src =
+                                    "/nomedia.png";
                                 }}
                               />
                             </div>
@@ -153,13 +171,19 @@ export default function MainPage() {
                             </h4>
                             <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
                               <User className="w-3 h-3" />
-                              <span>{post.author.name || post.author.username}</span>
+                              <span>
+                                {post.author.name || post.author.username}
+                              </span>
                               <span>•</span>
                               <span>{timeAgo(post.created_at)}</span>
                             </div>
                             <div className="flex items-center gap-1 mt-1">
                               {post.tags?.slice(0, 2).map((tag) => (
-                                <Badge key={tag.id} variant="secondary" className="text-xs px-1.5 py-0.5">
+                                <Badge
+                                  key={tag.id}
+                                  variant="secondary"
+                                  className="text-xs px-1.5 py-0.5"
+                                >
                                   {tag.name}
                                 </Badge>
                               ))}
@@ -182,11 +206,13 @@ export default function MainPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="flex flex-wrap gap-2">
-                    {Array.from(new Set(
-                      [...featuredPosts, ...posts]
-                        .flatMap(post => post.tags || [])
-                        .slice(0, 10)
-                    )).map((tag) => (
+                    {Array.from(
+                      new Set(
+                        [...featuredPosts, ...posts]
+                          .flatMap((post) => post.tags || [])
+                          .slice(0, 10),
+                      ),
+                    ).map((tag) => (
                       <Badge key={tag.id} variant="outline" className="text-xs">
                         {tag.name}
                       </Badge>
@@ -209,22 +235,32 @@ export default function MainPage() {
                       <div className="text-2xl font-bold text-primary">
                         {featuredPosts.length + posts.length}
                       </div>
-                      <div className="text-sm text-muted-foreground">Articles</div>
+                      <div className="text-sm text-muted-foreground">
+                        Articles
+                      </div>
                     </div>
                     <div className="text-center">
                       <div className="text-2xl font-bold text-primary">
                         {featuredPosts.length}
                       </div>
-                      <div className="text-sm text-muted-foreground">Featured</div>
+                      <div className="text-sm text-muted-foreground">
+                        Featured
+                      </div>
                     </div>
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-primary">
-                      {[...featuredPosts, ...posts].reduce((sum, post) => sum + post.likes, 0)}
+                      {[...featuredPosts, ...posts].reduce(
+                        (sum, post) => sum + post.likes,
+                        0,
+                      )}
                     </div>
-                    <div className="text-sm text-muted-foreground">Total Likes</div>
+                    <div className="text-sm text-muted-foreground">
+                      Total Likes
+                    </div>
                   </div>
-                </CardContent>                </Card>
+                </CardContent>{" "}
+              </Card>
             </div>
           </div>
         </div>
