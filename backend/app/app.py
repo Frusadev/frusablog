@@ -1,7 +1,6 @@
 import uvicorn
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from starlette.status import HTTP_404_NOT_FOUND
 
 from app.api.routes.v1.controllers.auth.auth import (
     auth_router as v1_auth_router,
@@ -22,7 +21,13 @@ from app.api.routes.v1.controllers.user_action import (
 from app.core.config.env import get_env
 from app.core.db.setup import setup_db
 
-app = FastAPI()
+DEBUG = get_env("DEBUG", "True") == "True"
+PORT = int(get_env("PORT", "8000")) or 8000
+
+app = FastAPI(
+    docs_url=("/docs" if DEBUG else None),
+    redoc_url=("/redoc" if DEBUG else None),
+)
 
 app.include_router(v1_auth_router)
 app.include_router(v1_post_router)
@@ -37,27 +42,15 @@ app.include_router(v1_user_action_router)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:3000"
-    ],  # Or ["http://localhost:3000"] for stricter control
+        "http://localhost:3000",
+        "https://ametsowou.me",
+        "https://www.ametsowou.me",
+        "https://blog.localhost",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-DEBUG = get_env("DEBUG", "True") == "False"
-PORT = int(get_env("PORT", "8000")) or 8000
-
-
-@app.get("/redoc")
-async def redoc():
-    if not DEBUG:
-        raise HTTPException(status_code=HTTP_404_NOT_FOUND)
-
-
-@app.get("/docs")
-async def openapidocs():
-    if not DEBUG:
-        raise HTTPException(status_code=HTTP_404_NOT_FOUND)
 
 
 def run_app():
