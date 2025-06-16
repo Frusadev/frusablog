@@ -20,13 +20,20 @@ import {
   DialogTitle, 
   DialogTrigger 
 } from "@/components/ui/dialog";
-import { Menu, User, Mail, Github, Linkedin, ExternalLink } from "lucide-react";
+import { Menu, User, Mail, Github, Linkedin, ExternalLink, LogIn } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useOptionalCurrentUser } from "@/hooks/useAuth";
 
 export default function Navigation() {
   const router = useRouter();
   const [aboutOpen, setAboutOpen] = useState(false);
   const [contactOpen, setContactOpen] = useState(false);
+  
+  // Get current user data (optional, doesn't throw on error)
+  const { data: currentUser, isError: isNotAuthenticated } = useOptionalCurrentUser();
+  
+  // User is not authenticated if there's an error OR no current user data
+  const isUserNotAuthenticated = isNotAuthenticated || !currentUser;
 
   const biography = `I'm Daniel Ametsowou and this is my story.
 
@@ -164,11 +171,37 @@ I'm Daniel and I'm just getting started.`;
               </DialogContent>
             </Dialog>
 
+            {/* Login Button for unauthenticated users */}
+            {isUserNotAuthenticated && (
+              <Button 
+                variant="default" 
+                size="sm"
+                onClick={() => router.push("/login")}
+                className="flex items-center gap-2"
+              >
+                <LogIn className="w-4 h-4" />
+                Login
+              </Button>
+            )}
+
             <ThemeSwitch />
           </div>
 
           {/* Mobile Navigation */}
           <div className="md:hidden flex items-center space-x-2">
+            {/* Login Button for mobile - unauthenticated users only */}
+            {isUserNotAuthenticated && (
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => router.push("/login")}
+                className="flex items-center gap-1"
+              >
+                <LogIn className="w-3 h-3" />
+                Login
+              </Button>
+            )}
+            
             <ThemeSwitch />
             <Sheet>
               <SheetTrigger asChild>
@@ -229,6 +262,19 @@ I'm Daniel and I'm just getting started.`;
                       </a>
                     </div>
                   </div>
+
+                  {/* Login Button for mobile - unauthenticated users only */}
+                  {isUserNotAuthenticated && (
+                    <div className="border-t pt-4">
+                      <Button 
+                        onClick={() => router.push("/login")}
+                        className="w-full flex items-center gap-2"
+                      >
+                        <LogIn className="w-4 h-4" />
+                        Login
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </SheetContent>
             </Sheet>
