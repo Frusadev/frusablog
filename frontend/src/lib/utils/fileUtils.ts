@@ -6,6 +6,6 @@
 export function getResourceUrl(resourceId: string | undefined | null): string | null {
   if (!resourceId) return null;
   
-  const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:8000";
+  const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL || "https://api.ametsowou.me";
   return `${serverUrl}/v1/resources/${resourceId}`;
 }
