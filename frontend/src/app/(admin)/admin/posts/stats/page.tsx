@@ -62,19 +62,19 @@ interface ChartData {
 const chartConfig = {
   views: {
     label: "Views",
-    color: "hsl(var(--chart-1))",
+    color: "#3b82f6", // Bright blue
   },
   visits: {
     label: "Visits",
-    color: "hsl(var(--chart-2))",
+    color: "#10b981", // Bright emerald green
   },
   avgViewTime: {
     label: "Avg View Time (s)",
-    color: "hsl(var(--chart-3))",
+    color: "#f59e0b", // Bright amber
   },
   avgVisitTime: {
     label: "Avg Visit Time (s)",
-    color: "hsl(var(--chart-4))",
+    color: "#ef4444", // Bright red
   },
 };
 
@@ -194,21 +194,22 @@ export default function StatsPage() {
   };
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-4 sm:p-6 space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Statistics</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Statistics</h1>
+          <p className="text-muted-foreground text-sm sm:text-base">
             Detailed analytics and insights for your blog
           </p>
         </div>
         
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-2 overflow-x-auto">
           <Button
             variant={timeRange === 7 ? "default" : "outline"}
             size="sm"
             onClick={() => setTimeRange(7)}
+            className="whitespace-nowrap"
           >
             7 days
           </Button>
@@ -216,6 +217,7 @@ export default function StatsPage() {
             variant={timeRange === 30 ? "default" : "outline"}
             size="sm"
             onClick={() => setTimeRange(30)}
+            className="whitespace-nowrap"
           >
             30 days
           </Button>
@@ -223,6 +225,7 @@ export default function StatsPage() {
             variant={timeRange === 90 ? "default" : "outline"}
             size="sm"
             onClick={() => setTimeRange(90)}
+            className="whitespace-nowrap"
           >
             90 days
           </Button>
@@ -237,7 +240,7 @@ export default function StatsPage() {
 
       <Show when={!isLoading}>
         {/* Overview Cards */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Articles</CardTitle>
@@ -302,40 +305,50 @@ export default function StatsPage() {
         </div>
 
         {/* Main Charts Grid */}
-        <div className="grid gap-6 lg:grid-cols-2">
+        <div className="grid gap-6 grid-cols-1 xl:grid-cols-2">
           {/* Views and Visits Chart */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BarChart3 className="h-5 w-5" />
-                Views & Visits Trend
+              <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                <BarChart3 className="h-4 w-4 sm:h-5 sm:w-5" />
+                <span className="truncate">Views & Visits Trend</span>
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-xs sm:text-sm">
                 Daily views and visits over the last {timeRange} days
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <ChartContainer config={chartConfig} className="h-[300px]">
-                <AreaChart data={chartData}>
+              <ChartContainer config={chartConfig} className="h-[200px] sm:h-[250px] lg:h-[300px]">
+                <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="date" />
-                  <YAxis />
+                  <XAxis 
+                    dataKey="date" 
+                    fontSize={10}
+                    className="sm:text-xs"
+                    tickMargin={5}
+                  />
+                  <YAxis 
+                    fontSize={10}
+                    className="sm:text-xs"
+                    tickMargin={5}
+                    width={30}
+                  />
                   <ChartTooltip content={<ChartTooltipContent />} />
                   <ChartLegend content={<ChartLegendContent />} />
                   <Area
                     type="monotone"
                     dataKey="views"
                     stackId="1"
-                    stroke="var(--color-views)"
-                    fill="var(--color-views)"
+                    stroke="#3b82f6"
+                    fill="#3b82f6"
                     fillOpacity={0.6}
                   />
                   <Area
                     type="monotone"
                     dataKey="visits"
                     stackId="1"
-                    stroke="var(--color-visits)"
-                    fill="var(--color-visits)"
+                    stroke="#10b981"
+                    fill="#10b981"
                     fillOpacity={0.6}
                   />
                 </AreaChart>
@@ -346,20 +359,30 @@ export default function StatsPage() {
           {/* Engagement Time Chart */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Clock className="h-5 w-5" />
-                Average Time Metrics
+              <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                <Clock className="h-4 w-4 sm:h-5 sm:w-5" />
+                <span className="truncate">Average Time Metrics</span>
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-xs sm:text-sm">
                 Average time spent viewing and visiting
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <ChartContainer config={chartConfig} className="h-[300px]">
-                <LineChart data={chartData}>
+              <ChartContainer config={chartConfig} className="h-[200px] sm:h-[250px] lg:h-[300px]">
+                <LineChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="date" />
-                  <YAxis />
+                  <XAxis 
+                    dataKey="date" 
+                    fontSize={10}
+                    className="sm:text-xs"
+                    tickMargin={5}
+                  />
+                  <YAxis 
+                    fontSize={10}
+                    className="sm:text-xs"
+                    tickMargin={5}
+                    width={30}
+                  />
                   <ChartTooltip 
                     content={<ChartTooltipContent />}
                     formatter={(value, name) => [
@@ -371,16 +394,18 @@ export default function StatsPage() {
                   <Line
                     type="monotone"
                     dataKey="avgViewTime"
-                    stroke="var(--color-avgViewTime)"
+                    stroke="#f59e0b"
                     strokeWidth={2}
-                    dot={{ r: 4 }}
+                    dot={{ r: 3, fill: "#f59e0b" }}
+                    className="sm:stroke-[2] sm:dot-r-4"
                   />
                   <Line
                     type="monotone"
                     dataKey="avgVisitTime"
-                    stroke="var(--color-avgVisitTime)"
+                    stroke="#ef4444"
                     strokeWidth={2}
-                    dot={{ r: 4 }}
+                    dot={{ r: 3, fill: "#ef4444" }}
+                    className="sm:stroke-[2] sm:dot-r-4"
                   />
                 </LineChart>
               </ChartContainer>
@@ -391,57 +416,85 @@ export default function StatsPage() {
         {/* Full Width Views Bar Chart */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5" />
-              Daily Views Breakdown
+            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+              <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5" />
+              <span className="truncate">Daily Views Breakdown</span>
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-xs sm:text-sm">
               Individual day performance over the selected period
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <ChartContainer config={chartConfig} className="h-[400px]">
-              <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+            <ChartContainer config={chartConfig} className="h-[250px] sm:h-[300px] lg:h-[400px]">
+              <BarChart 
+                data={chartData} 
+                margin={{ 
+                  top: 20, 
+                  right: 10, 
+                  left: 0, 
+                  bottom: 5 
+                }}
+              >
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" />
-                <YAxis />
+                <XAxis 
+                  dataKey="date" 
+                  fontSize={10}
+                  className="sm:text-xs"
+                  tickMargin={5}
+                />
+                <YAxis 
+                  fontSize={10}
+                  className="sm:text-xs"
+                  tickMargin={5}
+                  width={30}
+                />
                 <ChartTooltip content={<ChartTooltipContent />} />
                 <ChartLegend content={<ChartLegendContent />} />
-                <Bar dataKey="views" fill="var(--color-views)" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="visits" fill="var(--color-visits)" radius={[4, 4, 0, 0]} />
+                <Bar 
+                  dataKey="views" 
+                  fill="#3b82f6" 
+                  radius={[2, 2, 0, 0]}
+                  className="sm:radius-[4,4,0,0]"
+                />
+                <Bar 
+                  dataKey="visits" 
+                  fill="#10b981" 
+                  radius={[2, 2, 0, 0]}
+                  className="sm:radius-[4,4,0,0]"
+                />
               </BarChart>
             </ChartContainer>
           </CardContent>
         </Card>
 
         {/* Summary Cards */}
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Peak Performance</CardTitle>
+              <CardTitle className="text-base sm:text-lg">Peak Performance</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-muted-foreground">Best Day (Views)</span>
-                <Badge variant="secondary">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 sm:gap-0">
+                <span className="text-xs sm:text-sm text-muted-foreground">Best Day (Views)</span>
+                <Badge variant="secondary" className="text-xs w-fit">
                   {chartData.length > 0 
                     ? chartData.reduce((max, day) => day.views > max.views ? day : max).date
                     : "N/A"
                   }
                 </Badge>
               </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-muted-foreground">Peak Views</span>
-                <span className="font-semibold">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 sm:gap-0">
+                <span className="text-xs sm:text-sm text-muted-foreground">Peak Views</span>
+                <span className="font-semibold text-sm sm:text-base">
                   {chartData.length > 0 
                     ? Math.max(...chartData.map(d => d.views))
                     : 0
                   }
                 </span>
               </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-muted-foreground">Peak Visits</span>
-                <span className="font-semibold">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 sm:gap-0">
+                <span className="text-xs sm:text-sm text-muted-foreground">Peak Visits</span>
+                <span className="font-semibold text-sm sm:text-base">
                   {chartData.length > 0 
                     ? Math.max(...chartData.map(d => d.visits))
                     : 0
@@ -453,30 +506,30 @@ export default function StatsPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Average Metrics</CardTitle>
+              <CardTitle className="text-base sm:text-lg">Average Metrics</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-muted-foreground">Avg Daily Views</span>
-                <span className="font-semibold">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 sm:gap-0">
+                <span className="text-xs sm:text-sm text-muted-foreground">Avg Daily Views</span>
+                <span className="font-semibold text-sm sm:text-base">
                   {chartData.length > 0 
                     ? Math.round(chartData.reduce((sum, d) => sum + d.views, 0) / chartData.length)
                     : 0
                   }
                 </span>
               </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-muted-foreground">Avg Daily Visits</span>
-                <span className="font-semibold">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 sm:gap-0">
+                <span className="text-xs sm:text-sm text-muted-foreground">Avg Daily Visits</span>
+                <span className="font-semibold text-sm sm:text-base">
                   {chartData.length > 0 
                     ? Math.round(chartData.reduce((sum, d) => sum + d.visits, 0) / chartData.length)
                     : 0
                   }
                 </span>
               </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-muted-foreground">Avg View Time</span>
-                <span className="font-semibold">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 sm:gap-0">
+                <span className="text-xs sm:text-sm text-muted-foreground">Avg View Time</span>
+                <span className="font-semibold text-sm sm:text-base">
                   {chartData.length > 0 
                     ? formatTime(Math.round(chartData.reduce((sum, d) => sum + d.avgViewTime, 0) / chartData.length))
                     : "0s"
@@ -488,27 +541,27 @@ export default function StatsPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Engagement</CardTitle>
+              <CardTitle className="text-base sm:text-lg">Engagement</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-muted-foreground">Total Visits</span>
-                <span className="font-semibold">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 sm:gap-0">
+                <span className="text-xs sm:text-sm text-muted-foreground">Total Visits</span>
+                <span className="font-semibold text-sm sm:text-base">
                   {globalVisitsQuery.data || 0}
                 </span>
               </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-muted-foreground">Views/Visit Ratio</span>
-                <span className="font-semibold">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 sm:gap-0">
+                <span className="text-xs sm:text-sm text-muted-foreground">Views/Visit Ratio</span>
+                <span className="font-semibold text-sm sm:text-base">
                   {globalVisitsQuery.data && globalViewsQuery.data && globalVisitsQuery.data > 0
                     ? (globalViewsQuery.data / globalVisitsQuery.data).toFixed(2)
                     : "0"
                   }
                 </span>
               </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-muted-foreground">Period</span>
-                <Badge>
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 sm:gap-0">
+                <span className="text-xs sm:text-sm text-muted-foreground">Period</span>
+                <Badge className="text-xs w-fit">
                   {format(startDate, "MMM dd")} - {format(endDate, "MMM dd")}
                 </Badge>
               </div>
