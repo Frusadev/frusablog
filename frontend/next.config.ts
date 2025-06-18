@@ -5,6 +5,11 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: "https",
+        hostname: "api.ametsowou.me",
+        pathname: "/v1/resources/**",
+      },
+      {
+        protocol: "https",
         hostname: "ametsowou.me",
         pathname: "/v1/resources/**",
       },
