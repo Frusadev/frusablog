@@ -174,28 +174,29 @@ export default function NewPostPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8 max-w-6xl">
+      <div className="container mx-auto px-4 py-8 max-w-7xl">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
           <div className="flex items-center gap-4">
             <Button onClick={() => router.back()} variant="ghost" size="sm">
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back
             </Button>
             <div>
-              <h1 className="text-2xl font-bold">Create New Post</h1>
-              <p className="text-muted-foreground">
+              <h1 className="text-xl sm:text-2xl font-bold">Create New Post</h1>
+              <p className="text-muted-foreground text-sm sm:text-base">
                 Write and publish your blog post
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
             <Button
               onClick={handleSaveAsDraft}
               disabled={createMutation.isPending}
               variant="outline"
               size="sm"
+              className="flex items-center justify-center"
             >
               <Show when={createMutation.isPending}>
                 <Spinner size="small" className="stroke-foreground mr-2" />
@@ -209,6 +210,7 @@ export default function NewPostPage() {
               onClick={handlePublish}
               disabled={createMutation.isPending}
               size="sm"
+              className="flex items-center justify-center"
             >
               <Show when={createMutation.isPending}>
                 <Spinner size="small" className="stroke-background mr-2" />
@@ -221,9 +223,9 @@ export default function NewPostPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 sm:gap-8">
           {/* Main Content */}
-          <div className="lg:col-span-3 space-y-6">
+          <div className="xl:col-span-3 space-y-6">
             {/* Basic Information */}
             <Card>
               <CardHeader>
