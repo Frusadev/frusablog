@@ -85,13 +85,13 @@ export default function TagsPage() {
 
   return (
     <div className="flex flex-col">
-      <div className="flex items-center justify-between p-4">
-        <div className="flex items-center gap-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
           <div className="flex items-center gap-2">
             <TagIcon className="w-5 h-5 text-muted-foreground" />
-            <span className="font-semibold text-xl">Tag Management</span>
+            <span className="font-semibold text-lg sm:text-xl">Tag Management</span>
           </div>
-          <div className="flex items-center gap-2 text-sm">
+          <div className="flex flex-wrap items-center gap-2 text-sm">
             <Badge variant="outline">Total: {tags.length}</Badge>
             <Badge variant="secondary" className="flex items-center gap-1">
               <Hash className="w-3 h-3" />
@@ -101,12 +101,12 @@ export default function TagsPage() {
         </div>
       </div>
 
-      <div className="p-4">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="px-2 sm:px-4">
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6">
           {/* Create New Tag */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
                 <Plus className="w-4 h-4" />
                 Create New Tag
               </CardTitle>
@@ -145,10 +145,10 @@ export default function TagsPage() {
           </Card>
 
           {/* Existing Tags */}
-          <div className="lg:col-span-2">
+          <div className="xl:col-span-2">
             <Card>
               <CardHeader>
-                <CardTitle>Existing Tags</CardTitle>
+                <CardTitle className="text-lg sm:text-xl">Existing Tags</CardTitle>
               </CardHeader>
               <CardContent>
                 <Show when={isLoading}>
@@ -177,7 +177,7 @@ export default function TagsPage() {
                           className="flex items-center gap-2 text-sm px-3 py-2"
                         >
                           <Hash className="w-3 h-3" />
-                          {tag.name}
+                          <span className="break-all">{tag.name}</span>
                           
                           <AlertDialog>
                             <AlertDialogTrigger asChild>

@@ -119,19 +119,20 @@ export default function FilesPage() {
   };
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold">File Management</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">File Management</h1>
+          <p className="text-muted-foreground text-sm sm:text-base">
             Manage uploaded files and resources
           </p>
         </div>
         <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
           <DialogTrigger asChild>
-            <Button>
+            <Button className="w-full sm:w-auto">
               <Upload className="mr-2 h-4 w-4" />
-              Upload Files
+              <span className="hidden sm:inline">Upload Files</span>
+              <span className="sm:hidden">Upload</span>
             </Button>
           </DialogTrigger>
           <DialogContent>
@@ -186,8 +187,8 @@ export default function FilesPage() {
         </Dialog>
       </div>
 
-      <div className="flex items-center space-x-4">
-        <div className="relative flex-1 max-w-sm">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
+        <div className="relative flex-1 max-w-full sm:max-w-sm">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search files..."
@@ -199,15 +200,15 @@ export default function FilesPage() {
       </div>
 
       <Tabs defaultValue="all" className="w-full">
-        <TabsList>
-          <TabsTrigger value="all">All Files</TabsTrigger>
-          <TabsTrigger value="protected">Protected</TabsTrigger>
-          <TabsTrigger value="public">Public</TabsTrigger>
+        <TabsList className="w-full sm:w-auto">
+          <TabsTrigger value="all" className="flex-1 sm:flex-none">All Files</TabsTrigger>
+          <TabsTrigger value="protected" className="flex-1 sm:flex-none">Protected</TabsTrigger>
+          <TabsTrigger value="public" className="flex-1 sm:flex-none">Public</TabsTrigger>
         </TabsList>
 
         <TabsContent value="all" className="space-y-4">
           {isLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {Array.from({ length: 6 }).map((_, i) => (
                 <Card key={i} className="animate-pulse">
                   <CardHeader className="pb-2">
@@ -237,22 +238,23 @@ export default function FilesPage() {
               </CardContent>
             </Card>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {filteredFiles.map((file) => (
                 <Card key={file.id}>
                   <CardHeader className="pb-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                      <div className="flex items-center space-x-2 min-w-0 flex-1">
                         {getFileIcon(file.name)}
                         <CardTitle className="text-sm truncate">{file.name}</CardTitle>
                       </div>
-                      <Badge variant={file.protected ? "destructive" : "secondary"}>
+                      <Badge variant={file.protected ? "destructive" : "secondary"} className="shrink-0">
                         {file.protected ? (
                           <Lock className="h-3 w-3 mr-1" />
                         ) : (
                           <Globe className="h-3 w-3 mr-1" />
                         )}
-                        {file.protected ? "Protected" : "Public"}
+                        <span className="hidden sm:inline">{file.protected ? "Protected" : "Public"}</span>
+                        <span className="sm:hidden">{file.protected ? "P" : "Pub"}</span>
                       </Badge>
                     </div>
                     <CardDescription className="text-xs">
@@ -270,17 +272,20 @@ export default function FilesPage() {
                         {file.owner.name}
                       </div>
                     )}
-                    <div className="flex items-center space-x-2 pt-2">
-                      <Button size="sm" variant="outline" className="flex-1">
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-2">
+                      <Button size="sm" variant="outline" className="flex-1 sm:flex-none">
                         <Download className="h-3 w-3 mr-1" />
-                        Download
+                        <span className="hidden sm:inline">Download</span>
+                        <span className="sm:hidden">DL</span>
                       </Button>
                       <Button
                         size="sm"
                         variant="destructive"
                         onClick={() => handleDelete(file)}
+                        className="sm:w-auto"
                       >
-                        <Trash2 className="h-3 w-3" />
+                        <Trash2 className="h-3 w-3 sm:mr-0" />
+                        <span className="sm:hidden ml-1">Delete</span>
                       </Button>
                     </div>
                   </CardContent>
@@ -291,7 +296,7 @@ export default function FilesPage() {
         </TabsContent>
 
         <TabsContent value="protected">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {filteredFiles
               .filter((file) => file.protected)
               .map((file) => (
@@ -303,7 +308,7 @@ export default function FilesPage() {
         </TabsContent>
 
         <TabsContent value="public">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {filteredFiles
               .filter((file) => !file.protected)
               .map((file) => (
