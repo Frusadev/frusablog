@@ -98,13 +98,13 @@ export default function CommentsPage() {
 
   return (
     <div className="flex flex-col">
-      <div className="flex items-center justify-between p-4">
-        <div className="flex items-center gap-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
           <div className="flex items-center gap-2">
             <MessageSquare className="w-5 h-5 text-muted-foreground" />
-            <span className="font-semibold text-xl">Comments Management</span>
+            <span className="font-semibold text-lg sm:text-xl">Comments Management</span>
           </div>
-          <div className="flex items-center gap-2 text-sm">
+          <div className="flex flex-wrap items-center gap-2 text-sm">
             <Badge variant="outline">Total: {allCommentsCount}</Badge>
             <Badge variant="secondary" className="flex items-center gap-1">
               <MessageSquare className="w-3 h-3" />
@@ -114,11 +114,11 @@ export default function CommentsPage() {
         </div>
       </div>
 
-      <div className="p-4 space-y-6">
+      <div className="px-2 sm:px-4 space-y-4 sm:space-y-6">
         {/* Post Selection */}
         <Card>
           <CardHeader>
-            <CardTitle>Select Post to View Comments</CardTitle>
+            <CardTitle className="text-lg sm:text-xl">Select Post to View Comments</CardTitle>
           </CardHeader>
           <CardContent>
             <Show when={postsLoading}>
@@ -134,7 +134,7 @@ export default function CommentsPage() {
             </Show>
 
             <Show when={!postsLoading && posts.length > 0}>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {posts.map((post) => (
                   <Card
                     key={post.id}
@@ -145,16 +145,17 @@ export default function CommentsPage() {
                     }`}
                     onClick={() => setSelectedPostId(post.id)}
                   >
-                    <CardContent className="p-4">
+                    <CardContent className="p-3 sm:p-4">
                       <h3 className="font-medium text-sm mb-2 line-clamp-2">
                         {post.title}
                       </h3>
-                      <div className="flex items-center justify-between">
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
                         <Badge variant="outline" className="text-xs">
                           {post.published ? "Published" : "Draft"}
                         </Badge>
                         <span className="text-xs text-muted-foreground">
-                          Click to view comments
+                          <span className="hidden sm:inline">Click to view comments</span>
+                          <span className="sm:hidden">Tap to view</span>
                         </span>
                       </div>
                     </CardContent>
@@ -169,8 +170,8 @@ export default function CommentsPage() {
         <Show when={!!(selectedPostId && selectedPost)}>
           <Card>
             <CardHeader>
-              <CardTitle>
-                Comments for: {selectedPost?.title}
+              <CardTitle className="text-lg sm:text-xl">
+                Comments for: <span className="block sm:inline text-base sm:text-lg font-normal text-muted-foreground mt-1 sm:mt-0">{selectedPost?.title}</span>
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -195,7 +196,7 @@ export default function CommentsPage() {
                   {comments.map((comment) => (
                     <Card key={comment.id}>
                       <CardHeader className="pb-3">
-                        <div className="flex items-start justify-between">
+                        <div className="flex flex-col sm:flex-row items-start justify-between gap-3">
                           <div className="flex items-center gap-3">
                             <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
                               <User className="w-4 h-4 text-primary" />
@@ -208,16 +209,17 @@ export default function CommentsPage() {
                             </div>
                           </div>
                           
-                          <div className="flex items-center gap-2">
-                            <Badge variant="outline" className="flex items-center gap-1">
+                          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full sm:w-auto">
+                            <Badge variant="outline" className="flex items-center gap-1 w-full sm:w-auto justify-center sm:justify-start">
                               <Calendar className="w-3 h-3" />
                               {timeAgo(comment.created_at)}
                             </Badge>
                             
                             <AlertDialog>
                               <AlertDialogTrigger asChild>
-                                <Button variant="outline" size="sm">
-                                  <Trash2 className="w-4 h-4" />
+                                <Button variant="outline" size="sm" className="w-full sm:w-auto">
+                                  <Trash2 className="w-4 h-4 sm:mr-0" />
+                                  <span className="sm:hidden ml-2">Delete</span>
                                 </Button>
                               </AlertDialogTrigger>
                               <AlertDialogContent>
@@ -252,8 +254,8 @@ export default function CommentsPage() {
                             <p className="text-sm">{comment.content}</p>
                           </div>
                           
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-4">
+                          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                            <div className="flex flex-wrap items-center gap-2 sm:gap-4">
                               <Badge variant="secondary" className="flex items-center gap-1">
                                 <Heart className="w-3 h-3" />
                                 {comment.likes} likes
@@ -268,9 +270,10 @@ export default function CommentsPage() {
                             
                             <div className="flex items-center gap-2">
                               <Link href={`/post/${selectedPostId}`}>
-                                <Button variant="outline" size="sm">
+                                <Button variant="outline" size="sm" className="w-full sm:w-auto">
                                   <Eye className="w-4 h-4 mr-2" />
-                                  View Post
+                                  <span className="hidden sm:inline">View Post</span>
+                                  <span className="sm:hidden">View</span>
                                 </Button>
                               </Link>
                             </div>

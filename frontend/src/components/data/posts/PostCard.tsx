@@ -67,10 +67,10 @@ export default function PostCard({
         } rounded-xl hover:bg-card/80`}
       >
         <Show when={cardOrientation === "list"}>
-          <div className="flex gap-4 p-4">
+          <div className="flex flex-col sm:flex-row gap-4 p-4">
             <div className="flex-shrink-0">
               <div
-                className="rounded-xl w-32 h-24 overflow-hidden"
+                className="rounded-xl w-full sm:w-32 h-48 sm:h-24 overflow-hidden"
                 ref={coverContainerRef}
               >
                 <Show when={postCover.isLoading}>
