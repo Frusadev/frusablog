@@ -34,6 +34,9 @@ RUN pip install uv
 
 # 2. Non‑root runtime user
 RUN useradd -m runner
+RUN mkdir -p /home/runner/app/fs
+RUN chown -R runner:runner /home/runner/app/fs
+RUN chown -R runner:runner /home/runner/
 USER runner
 WORKDIR /home/runner/app
 
