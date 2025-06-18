@@ -17,6 +17,7 @@ import { getResourceUrl } from "@/lib/utils/fileUtils";
 import { createPostSlug } from "@/lib/utils/slug";
 import { useRouter } from "next/navigation";
 import { useVisitTracking } from "@/hooks/useUserTracking";
+import Image from "next/image";
 
 const POSTS_PER_PAGE = 8;
 
@@ -152,11 +153,13 @@ export default function MainPage() {
                         <div className="flex gap-3">
                           <Show when={!!post.cover}>
                             <div className="w-16 h-16 bg-muted rounded-lg flex-shrink-0 overflow-hidden">
-                              <img
+                              <Image
                                 src={
                                   getResourceUrl(post.cover) || "/nomedia.png"
                                 }
                                 alt={post.title}
+                                width={64}
+                                height={64}
                                 className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-200"
                                 onError={(e) => {
                                   (e.target as HTMLImageElement).src =

@@ -79,9 +79,14 @@ export default function RootLayout({
               },
             ]}
           />
-          <div className="w-full min-h-screen p-4 bg-sidebar">
+          <div className="w-full min-h-screen p-2 sm:p-4 bg-sidebar">
             <div className="rounded-md border w-full min-h-full bg-background">
-              <SidebarTrigger />
+              <div className="block sm:hidden p-2 border-b">
+                <SidebarTrigger />
+              </div>
+              <div className="hidden sm:block">
+                <SidebarTrigger />
+              </div>
               {children}
             </div>
           </div>

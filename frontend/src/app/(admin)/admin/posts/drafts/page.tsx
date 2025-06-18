@@ -57,8 +57,8 @@ export default function DraftsPage() {
 
   return (
     <div className="flex flex-col">
-      <div className="flex items-center justify-between p-4">
-        <div className="flex items-center gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
           <div className="flex items-center gap-2">
             <Clock className="w-5 h-5 text-muted-foreground" />
             <span className="font-semibold text-xl">Draft Posts</span>
@@ -84,9 +84,12 @@ export default function DraftsPage() {
             onClick={() =>
               setPostsOrientation(postsOrientation === "grid" ? "list" : "grid")
             }
-            className="w-10 h-10 rounded-xl"
+            className="w-full sm:w-10 h-10 rounded-xl flex items-center justify-center"
           >
             {postsOrientation === "grid" ? <Grid /> : <ListTree />}
+            <span className="ml-2 sm:hidden">
+              {postsOrientation === "grid" ? "Grid View" : "List View"}
+            </span>
           </Button>
         </div>
       </div>
@@ -113,7 +116,7 @@ export default function DraftsPage() {
 
       <Show when={!isLoading && draftPosts.length > 0}>
         <Show when={postsOrientation === "grid"}>
-          <GridView className="gap-2 px-2">
+          <GridView className="gap-2 px-2 sm:px-4">
             {draftPosts.map((post) => (
               <Link href={`/admin/posts/${post.id}`} key={post.id}>
                 <AdminPostCard
@@ -128,7 +131,7 @@ export default function DraftsPage() {
         </Show>
         
         <Show when={postsOrientation === "list"}>
-          <ListView gap={2} className="px-2">
+          <ListView gap={2} className="px-2 sm:px-4">
             {draftPosts.map((post) => (
               <Link href={`/admin/posts/${post.id}`} key={post.id}>
                 <AdminPostCard

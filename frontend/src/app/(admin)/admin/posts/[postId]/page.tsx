@@ -231,9 +231,9 @@ export default function PostEditPage() {
   
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8 max-w-6xl">
+      <div className="container mx-auto px-4 py-8 max-w-7xl">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
           <div className="flex items-center gap-4">
             <Button
               onClick={() => router.back()}
@@ -244,16 +244,17 @@ export default function PostEditPage() {
               Back
             </Button>
             <div>
-              <h1 className="text-2xl font-bold">Edit Post</h1>
-              <p className="text-muted-foreground">Make changes to your article</p>
+              <h1 className="text-xl sm:text-2xl font-bold">Edit Post</h1>
+              <p className="text-muted-foreground text-sm sm:text-base">Make changes to your article</p>
             </div>
           </div>
           
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
             <Button
               onClick={() => post && router.push(`/post/${createPostSlug(post.title, post.id)}`)}
               variant="outline"
               size="sm"
+              className="flex items-center justify-center"
             >
               <Eye className="w-4 h-4 mr-2" />
               Preview
@@ -262,6 +263,7 @@ export default function PostEditPage() {
               onClick={handleSave}
               disabled={updateMutation.isPending}
               size="sm"
+              className="flex items-center justify-center"
             >
               <Show when={updateMutation.isPending}>
                 <Spinner size="small" className="stroke-background mr-2" />
@@ -274,9 +276,9 @@ export default function PostEditPage() {
           </div>
         </div>
         
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 sm:gap-8">
           {/* Main Content */}
-          <div className="lg:col-span-3 space-y-6">
+          <div className="xl:col-span-3 space-y-6">
             {/* Basic Information */}
             <Card>
               <CardHeader>
