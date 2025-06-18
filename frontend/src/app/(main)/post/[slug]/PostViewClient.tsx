@@ -404,7 +404,7 @@ export default function PostViewClient({ slug }: PostViewClientProps) {
                       {children}
                     </a>
                   ),
-                  img: ({ alt, src, ...props }: React.ImgHTMLAttributes<HTMLImageElement>) => (
+                  img: ({ alt, src }: React.ImgHTMLAttributes<HTMLImageElement>) => (
                     <Image
                       className="rounded-lg my-6 max-w-full h-auto"
                       alt={alt || ""}
