@@ -107,11 +107,11 @@ async def create_file_resource(
 
     try:
         storage.write_file(file, resource)
-    except Exception as e:
+    except Exception:
         db_session.rollback()
         raise HTTPException(
             status_code=HTTP_400_BAD_REQUEST,
-            detail=f"Failed to save file: {str(e)}",
+            detail="Failed to save file.",
         )
 
     db_session.add(resource)
