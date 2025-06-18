@@ -35,6 +35,8 @@ services:
       - BACKEND_URL=${BACKEND_URL}
       - FRONTEND_URL=${FRONTEND_URL}
       - ADMIN_EMAIL=${ADMIN_EMAIL}
+    volumes:
+      - fs:/home/runner/app/fs:rw
 
   db:
     image: postgres:17
@@ -48,4 +50,5 @@ services:
       - "5432:5432"
 
 volumes:
-  postgres_data:
+  postgres_data: {}
+  fs: {}
