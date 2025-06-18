@@ -26,6 +26,7 @@ import { useViewTracking } from "@/hooks/useUserTracking";
 
 // Import highlight.js CSS for code syntax highlighting
 import "highlight.js/styles/github-dark.css";
+import Image from "next/image";
 
 export default function PostView() {
   const params = useParams();
@@ -236,8 +237,10 @@ export default function PostView() {
         {/* Cover Image */}
         <Show when={!!post.cover}>
           <div className="w-full h-64 md:h-80 lg:h-96 rounded-xl overflow-hidden mb-8 bg-muted">
-            <img
+            <Image
               src={getResourceUrl(post.cover) || "/nomedia.png"}
+              width={0}
+              height={0}
               alt={post.title}
               className="w-full h-full object-cover"
               onError={(e) => {
