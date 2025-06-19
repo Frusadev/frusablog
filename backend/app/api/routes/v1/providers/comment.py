@@ -47,7 +47,7 @@ async def create_comment(
         PermissionBuilder()
         .forRole(rw_role)
         .withActionName(ACTION_READWRITE)
-        .withResourceName(str(comment.id))
+        .withResourceId(str(comment.id))
         .withResourceName(COMMENT_RESOURCE)
         .make()
     )
