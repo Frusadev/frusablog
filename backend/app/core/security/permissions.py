@@ -13,6 +13,8 @@ from starlette.status import (
 from app.core.db.models import Permission, Role
 from app.core.security.checkers import check_existence
 
+MAIL_RESOURCE = "mail"
+USER_RESOURCE = "user"
 POST_RESOURCE = "post"
 FILE_RESOURCE = "file"
 INFOFIELD_RESOURCE = "info_field"

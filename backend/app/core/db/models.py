@@ -8,7 +8,7 @@ from app.api.routes.v1.dto.comments import CommentDTO
 from app.api.routes.v1.dto.file import ResourceDTO
 from app.api.routes.v1.dto.post import PostDTO
 from app.api.routes.v1.dto.tag import TagDTO
-from app.api.routes.v1.dto.user import UserDTO
+from app.api.routes.v1.dto.user import DetailedUserInfo, UserDTO
 from app.utils.crypto import gen_id
 
 
@@ -32,6 +32,9 @@ class User(SQLModel, table=True):
     email: str
     username: str
     name: str
+    joined_at: datetime = Field(default_factory=datetime.now)
+    banned: bool = False
+    last_ban_motive: str | None = None
     login_sessions: list["LoginSession"] = Relationship(back_populates="user")
     auth_sessions: list["AuthSession"] = Relationship(back_populates="user")
     roles: list["Role"] = Relationship(
@@ -50,6 +53,17 @@ class User(SQLModel, table=True):
 
     def to_dto(self):
         return UserDTO(id=self.id, username=self.username, name=self.name)
+
+    def detailed_dto(self):
+        return DetailedUserInfo(
+            id=self.id,
+            username=self.username,
+            name=self.name,
+            email=self.email,
+            joined_at=self.joined_at,
+            banned=self.banned,
+            last_ban_motive=self.last_ban_motive
+        )
 
 
 class PostTagLink(SQLModel, table=True):

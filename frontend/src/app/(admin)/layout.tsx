@@ -12,6 +12,10 @@ import {
   Archive,
   Tags,
   MessageSquare,
+  Users,
+  UserCheck,
+  UserX,
+  Mail,
 } from "lucide-react";
 import { Toaster } from "sonner";
 
@@ -76,6 +80,28 @@ export default function RootLayout({
                 label: "Comments",
                 href: "/admin/comments",
                 icon: <MessageSquare />,
+              },
+              {
+                label: "Users",
+                href: "",
+                icon: <Users />,
+                subLinks: [
+                  {
+                    label: "All users",
+                    href: "/admin/users",
+                    icon: <Users />,
+                  },
+                  {
+                    label: "Banned users",
+                    href: "/admin/users/banned",
+                    icon: <UserX />,
+                  },
+                  {
+                    label: "Send message",
+                    href: "/admin/users/message",
+                    icon: <Mail />,
+                  },
+                ],
               },
             ]}
           />
