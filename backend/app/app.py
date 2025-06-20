@@ -27,7 +27,7 @@ PORT = int(get_env("PORT", "8000")) or 8000
 app = FastAPI(
     docs_url=("/docs" if DEBUG else None),
     redoc_url=("/redoc" if DEBUG else None),
-    openapi_url=("/openapi.json" if DEBUG else None)
+    openapi_url=("/openapi.json" if DEBUG else None),
 )
 
 app.include_router(v1_auth_router)
