@@ -6,7 +6,6 @@ import AdminSidebar from "@/components/ui/custom/AdminSidebar";
 import {
   ChartLine,
   Newspaper,
-  Pencil,
   PlusCircle,
   Timer,
   Archive,
@@ -15,6 +14,9 @@ import {
   Users,
   UserX,
   Mail,
+  BarChart3,
+  Settings,
+  FileText,
 } from "lucide-react";
 import { Toaster } from "sonner";
 
@@ -37,68 +39,119 @@ export default function RootLayout({
       <AdminGuard>
         <SidebarProvider>
           <AdminSidebar
-            links={[
+            sections={[
+              // Overview Section
               {
-                label: "Posts",
-                href: "",
-                icon: <Pencil />,
-                subLinks: [
+                title: "Overview",
+                links: [
                   {
-                    label: "New post",
-                    href: "/admin/posts/new",
-                    icon: <PlusCircle />,
-                  },
-                  {
-                    label: "All posts",
+                    label: "Dashboard",
                     href: "/admin",
-                    icon: <Newspaper />,
-                  },
-                  {
-                    label: "Drafts",
-                    href: "/admin/posts/drafts",
-                    icon: <Timer />,
-                  },
-                  {
-                    label: "Archived",
-                    href: "/admin/posts/archived",
-                    icon: <Archive />,
-                  },
-                  {
-                    label: "Stats",
-                    href: "/admin/posts/stats",
-                    icon: <ChartLine />,
+                    icon: <BarChart3 />,
                   },
                 ],
               },
+
+              // Content Management Section
               {
-                label: "Tags",
-                href: "/admin/tags",
-                icon: <Tags />,
-              },
-              {
-                label: "Comments",
-                href: "/admin/comments",
-                icon: <MessageSquare />,
-              },
-              {
-                label: "Users",
-                href: "",
-                icon: <Users />,
-                subLinks: [
+                title: "Content",
+                links: [
                   {
-                    label: "All users",
-                    href: "/admin/users",
+                    label: "Posts",
+                    href: "",
+                    icon: <FileText />,
+                    subLinks: [
+                      {
+                        label: "All Posts",
+                        href: "/admin",
+                        icon: <Newspaper />,
+                      },
+                      {
+                        label: "New Post",
+                        href: "/admin/posts/new",
+                        icon: <PlusCircle />,
+                      },
+                      {
+                        label: "Drafts",
+                        href: "/admin/posts/drafts",
+                        icon: <Timer />,
+                      },
+                      {
+                        label: "Archived",
+                        href: "/admin/posts/archived",
+                        icon: <Archive />,
+                      },
+                      {
+                        label: "Tags",
+                        href: "/admin/tags",
+                        icon: <Tags />,
+                      },
+                      {
+                        label: "Comments",
+                        href: "/admin/comments",
+                        icon: <MessageSquare />,
+                      },
+                    ],
+                  },
+                ],
+              },
+
+              // User Management Section
+              {
+                title: "Users",
+                links: [
+                  {
+                    label: "User Management",
+                    href: "",
                     icon: <Users />,
+                    subLinks: [
+                      {
+                        label: "All Users",
+                        href: "/admin/users",
+                        icon: <Users />,
+                      },
+                      {
+                        label: "Banned Users",
+                        href: "/admin/users/banned",
+                        icon: <UserX />,
+                      },
+                      {
+                        label: "Send Message",
+                        href: "/admin/users/message",
+                        icon: <Mail />,
+                      },
+                    ],
                   },
+                ],
+              },
+
+              // Analytics Section
+              {
+                title: "Analytics",
+                links: [
                   {
-                    label: "Banned users",
-                    href: "/admin/users/banned",
-                    icon: <UserX />,
+                    label: "Reports",
+                    href: "",
+                    icon: <ChartLine />,
+                    subLinks: [
+                      {
+                        label: "Traffic",
+                        href: "/admin/posts/stats",
+                        icon: <BarChart3 />,
+                      },
+                    ],
                   },
+                ],
+              },
+
+              // System Section
+              {
+                title: "System",
+                links: [
                   {
-                    label: "Send message",
-                    href: "/admin/users/message",
-                    icon: <Mail />,
+                    label: "Settings",
+                    href: "/admin/settings",
+                    icon: <Settings />,
                   },
                 ],
               },
