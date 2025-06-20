@@ -3,7 +3,7 @@ from typing import Annotated
 
 from fastapi import BackgroundTasks, Cookie, Depends
 from pydantic import Field
-from sqlmodel import Session, func, select
+from sqlmodel import Session, col, func, or_, select
 
 from app.api.routes.v1.dto.message import MessageResponse
 from app.api.routes.v1.dto.user import (
@@ -186,7 +186,7 @@ async def mail_user(
         )
 
     bt.add_task(send_message)
-    return MessageResponse(message="Message successfully sent!")
+    return MessageResponse(message="Message successfully sent !")
 
 
 async def delete_user(db_session: Session, current_user: User, user_id: str):
@@ -241,4 +241,35 @@ async def send_broadcast(
             )
 
     bt.add_task(send_message, recipients_emails=recipients_emails)
-    return MessageResponse(message="Message successfully sent!")
+    return MessageResponse(message="Broadcast successfully sent !")
+
+
+async def search_user(
+    db_session: Session, current_user: User, query: str, skip: int, limit: int
+):
+    PermissionChecker(
+        db_session=db_session,
+        roles=current_user.roles,
+        bypass_role="admin",
+        pcheck_models=[
+            GlobalPermissionCheckModel(
+                resource_name=USER_RESOURCE, action_names=[ACTION_READ]
+            ),
+            GlobalPermissionCheckModel(
+                resource_name=USER_RESOURCE, action_names=[ACTION_READWRITE]
+            ),
+        ],
+    ).check(either=True)
+    users = db_session.exec(
+        select(User)
+        .where(
+            or_(
+                col(User.name).ilike(f"%{query}%"),
+                col(User.username).ilike(f"%{query}%"),
+                col(User.email).ilike(f"%{query}%"),
+            )
+        )
+        .offset(skip)
+        .limit(limit)
+    ).all()
+    return [user.detailed_dto() for user in users]

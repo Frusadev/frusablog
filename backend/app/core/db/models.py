@@ -56,6 +56,7 @@ class User(SQLModel, table=True):
 
     def detailed_dto(self):
         return DetailedUserInfo(
+            id=self.id,
             username=self.username,
             name=self.name,
             email=self.email,

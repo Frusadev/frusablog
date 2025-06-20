@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Literal
 
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 
 
 class UserDTO(BaseModel):
@@ -11,6 +11,7 @@ class UserDTO(BaseModel):
 
 
 class DetailedUserInfo(BaseModel):
+    id: str
     username: str
     name: str
     email: EmailStr
@@ -34,3 +35,7 @@ class BroadcastData(BaseModel):
     recipients_ids: str | Literal["all"]
     mail_content: str
     mail_subject: str
+
+
+class BanUserRequest(BaseModel):
+    motive: str = Field(min_length=100)
