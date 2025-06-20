@@ -45,4 +45,4 @@ COPY --from=builder --chown=runner:runner /home/runner/app /home/runner/app
 RUN pip install --upgrade pip
 
 EXPOSE 8000
-CMD ["uv", "run", "main.py"]
+CMD ["bash", "./entry.bash"]
