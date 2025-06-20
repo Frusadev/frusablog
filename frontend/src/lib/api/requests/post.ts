@@ -87,6 +87,7 @@ export async function toggleFeaturedPost(postId: string, featured: boolean) {
     published: currentPost.published,
     archived: currentPost.archived,
     featured: featured,
+    tag_ids: currentPost?.tags.map((tag) => tag.id) || [],
   };
 
   const request = ky.put<Post>(`${API_URL}/post`, {
