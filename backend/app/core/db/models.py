@@ -35,21 +35,33 @@ class User(SQLModel, table=True):
     joined_at: datetime = Field(default_factory=datetime.now)
     banned: bool = False
     last_ban_motive: str | None = None
-    login_sessions: list["LoginSession"] = Relationship(back_populates="user")
-    auth_sessions: list["AuthSession"] = Relationship(back_populates="user")
+    login_sessions: list["LoginSession"] = Relationship(
+        back_populates="user", cascade_delete=True
+    )
+    auth_sessions: list["AuthSession"] = Relationship(
+        back_populates="user", cascade_delete=True
+    )
     roles: list["Role"] = Relationship(
         back_populates="users", link_model=RoleUserLink
     )
-    comments: list["Comment"] = Relationship(back_populates="author")
-    posts: list["Post"] = Relationship(back_populates="author")
-    files: list["FileResource"] = Relationship(back_populates="owner")
+    comments: list["Comment"] = Relationship(
+        back_populates="author", cascade_delete=True
+    )
+    posts: list["Post"] = Relationship(
+        back_populates="author", cascade_delete=True
+    )
+    files: list["FileResource"] = Relationship(
+        back_populates="owner", cascade_delete=True
+    )
     liked_comments: list["Comment"] = Relationship(
         back_populates="liked_by", link_model=UserCommentLikeLink
     )
     liked_posts: list["Post"] = Relationship(
         back_populates="liked_by", link_model=UserPostLikeLink
     )
-    visits: list["VisitAction"] = Relationship(back_populates="user")
+    visits: list["VisitAction"] = Relationship(
+        back_populates="user", cascade_delete=True
+    )
 
     def to_dto(self):
         return UserDTO(id=self.id, username=self.username, name=self.name)
@@ -62,7 +74,7 @@ class User(SQLModel, table=True):
             email=self.email,
             joined_at=self.joined_at,
             banned=self.banned,
-            last_ban_motive=self.last_ban_motive
+            last_ban_motive=self.last_ban_motive,
         )
 
 
@@ -106,7 +118,9 @@ class Post(SQLModel, table=True):
     liked_by: list[User] = Relationship(
         back_populates="liked_posts", link_model=UserPostLikeLink
     )
-    views: list["ViewAction"] = Relationship(back_populates="post")
+    views: list["ViewAction"] = Relationship(
+        back_populates="post", cascade_delete=True
+    )
 
     def to_dto(self):
         return PostDTO(

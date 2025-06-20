@@ -187,6 +187,19 @@ async def get_all_posts(
 async def get_draft_posts(
     db_session: Session, current_user: User, skip: int, limit: int
 ):
+    PermissionChecker(
+        db_session=db_session,
+        roles=current_user.roles,
+        bypass_role="admin",
+        pcheck_models=[
+            GlobalPermissionCheckModel(
+                resource_name=POST_RESOURCE, action_names=[ACTION_READWRITE]
+            ),
+            GlobalPermissionCheckModel(
+                resource_name=POST_RESOURCE, action_names=[ACTION_READ]
+            ),
+        ],
+    ).check(either=True)
     draft_posts = db_session.exec(
         select(Post).where(Post.published == False).offset(skip).limit(limit)
     )
@@ -196,6 +209,19 @@ async def get_draft_posts(
 async def get_archived_posts(
     db_session: Session, current_user: User, skip: int, limit: int
 ):
+    PermissionChecker(
+        db_session=db_session,
+        roles=current_user.roles,
+        bypass_role="admin",
+        pcheck_models=[
+            GlobalPermissionCheckModel(
+                resource_name=POST_RESOURCE, action_names=[ACTION_READWRITE]
+            ),
+            GlobalPermissionCheckModel(
+                resource_name=POST_RESOURCE, action_names=[ACTION_READ]
+            ),
+        ],
+    ).check(either=True)
     archived_posts = db_session.exec(
         select(Post).where(Post.archived == True).offset(skip).limit(limit)
     )

@@ -15,7 +15,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/Spinner";
 import Show from "@/components/wrappers/Show";
 import { Separator } from "@/components/ui/separator";
-import { getPost, updatePost } from "@/lib/api/requests/post";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { getPost, updatePost, deletePost } from "@/lib/api/requests/post";
 import { getTags, createTag } from "@/lib/api/requests/tag";
 import { uploadFile, type FileResource } from "@/lib/api/requests/file";
 import { getResourceUrl } from "@/lib/utils/fileUtils";
@@ -29,7 +37,8 @@ import {
   X, 
   Plus,
   Eye,
-  Sparkles
+  Sparkles,
+  Trash2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -49,6 +58,7 @@ export default function PostEditPage() {
   const [featured, setFeatured] = useState(false);
   const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
   const [newTagName, setNewTagName] = useState("");
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   
   // Fetch post data
   const { data: post, isLoading: isPostLoading } = useQuery({
@@ -127,6 +137,19 @@ export default function PostEditPage() {
     },
   });
   
+  // Delete post mutation
+  const deleteMutation = useMutation({
+    mutationFn: () => deletePost(postId),
+    onSuccess: () => {
+      toast.success("Post deleted successfully");
+      queryClient.invalidateQueries({ queryKey: ["posts"] });
+      router.push("/admin");
+    },
+    onError: () => {
+      toast.error("Failed to delete post");
+    },
+  });
+  
   const handleCoverChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -195,6 +218,15 @@ export default function PostEditPage() {
     updateMutation.mutate(updateData);
   };
   
+  const handleDelete = () => {
+    setShowDeleteDialog(true);
+  };
+  
+  const confirmDelete = () => {
+    deleteMutation.mutate();
+    setShowDeleteDialog(false);
+  };
+  
   if (isPostLoading) {
     return (
       <div className="min-h-screen bg-background">
@@ -259,6 +291,21 @@ export default function PostEditPage() {
             >
               <Eye className="w-4 h-4 mr-2" />
               Preview
+            </Button>
+            <Button
+              onClick={handleDelete}
+              variant="destructive"
+              size="sm"
+              className="flex items-center justify-center"
+              disabled={deleteMutation.isPending}
+            >
+              <Show when={deleteMutation.isPending}>
+                <Spinner size="small" className="stroke-background mr-2" />
+              </Show>
+              <Show when={!deleteMutation.isPending}>
+                <Trash2 className="w-4 h-4 mr-2" />
+              </Show>
+              Delete
             </Button>
             <Button
               onClick={handleSave}
@@ -554,6 +601,39 @@ export default function PostEditPage() {
             </Card>
           </div>
         </div>
+        
+        {/* Delete Confirmation Dialog */}
+        <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Delete Post</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete &quot;{title}&quot;? This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button
+                onClick={() => setShowDeleteDialog(false)}
+                variant="outline"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={confirmDelete}
+                variant="destructive"
+                disabled={deleteMutation.isPending}
+              >
+                <Show when={deleteMutation.isPending}>
+                  <Spinner size="small" className="stroke-background mr-2" />
+                </Show>
+                <Show when={!deleteMutation.isPending}>
+                  <Trash2 className="w-4 h-4 mr-2" />
+                </Show>
+                Delete Post
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
