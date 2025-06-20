@@ -90,6 +90,12 @@ async def edit_post(
             )
         ],
     ).check()
+    tags = [
+        check_existence(
+            db_session.get(Tag, tag_id), detail=f"Tag {tag_id} not found."
+        )
+        for tag_id in data.tag_ids
+    ]
     post.title = data.title
     post.description = data.description
     post.cover = data.cover
@@ -97,6 +103,7 @@ async def edit_post(
     post.published = data.published
     post.archived = data.archived
     post.featured = data.featured
+    post.tags = tags
     db_session.add(post)
     db_session.commit()
     return post.to_dto()
@@ -180,6 +187,19 @@ async def get_all_posts(
 async def get_draft_posts(
     db_session: Session, current_user: User, skip: int, limit: int
 ):
+    PermissionChecker(
+        db_session=db_session,
+        roles=current_user.roles,
+        bypass_role="admin",
+        pcheck_models=[
+            GlobalPermissionCheckModel(
+                resource_name=POST_RESOURCE, action_names=[ACTION_READWRITE]
+            ),
+            GlobalPermissionCheckModel(
+                resource_name=POST_RESOURCE, action_names=[ACTION_READ]
+            ),
+        ],
+    ).check(either=True)
     draft_posts = db_session.exec(
         select(Post).where(Post.published == False).offset(skip).limit(limit)
     )
@@ -189,6 +209,19 @@ async def get_draft_posts(
 async def get_archived_posts(
     db_session: Session, current_user: User, skip: int, limit: int
 ):
+    PermissionChecker(
+        db_session=db_session,
+        roles=current_user.roles,
+        bypass_role="admin",
+        pcheck_models=[
+            GlobalPermissionCheckModel(
+                resource_name=POST_RESOURCE, action_names=[ACTION_READWRITE]
+            ),
+            GlobalPermissionCheckModel(
+                resource_name=POST_RESOURCE, action_names=[ACTION_READ]
+            ),
+        ],
+    ).check(either=True)
     archived_posts = db_session.exec(
         select(Post).where(Post.archived == True).offset(skip).limit(limit)
     )

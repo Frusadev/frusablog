@@ -10,6 +10,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarSeparator,
 } from "../sidebar";
 import { Button } from "../button";
 import { ArrowLeft } from "lucide-react";
@@ -21,7 +22,58 @@ export interface SidebarLink {
   subLinks?: SidebarLink[];
 }
 
-export default function AdminSidebar({ links }: { links?: SidebarLink[] }) {
+export interface SidebarSection {
+  title?: string;
+  links: SidebarLink[];
+}
+
+export default function AdminSidebar({ 
+  links, 
+  sections 
+}: { 
+  links?: SidebarLink[]; 
+  sections?: SidebarSection[];
+}) {
+  const renderLinks = (linksToRender: SidebarLink[]) => {
+    return linksToRender.map((link, i) => {
+      if (link.subLinks?.length ?? 0 > 0) {
+        return (
+          <SidebarGroup key={i}>
+            <SidebarGroupLabel className="cursor-default">{link.label}</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {link.subLinks?.map((sublink, index) => {
+                  return (
+                    <SidebarMenuItem key={index}>
+                      <SidebarMenuButton asChild>
+                        <a href={sublink.href}>
+                          {sublink.icon}
+                          <span>{sublink.label}</span>
+                        </a>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                })}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        );
+      }
+      return (
+        <SidebarMenu key={i}>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild>
+              <a href={link.href}>
+                {link.icon}
+                <span className="font-medium">{link.label}</span>
+              </a>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      );
+    });
+  };
+
   return (
     <Sidebar className="border-none">
       <SidebarHeader>
@@ -36,43 +88,23 @@ export default function AdminSidebar({ links }: { links?: SidebarLink[] }) {
         </div>
       </SidebarHeader>
       <SidebarContent className="px-2">
-        {links?.map((link, i) => {
-          if (link.subLinks?.length ?? 0 > 0) {
-            return (
-              <SidebarGroup key={i}>
-                <SidebarGroupLabel className="cursor-default">{link.label}</SidebarGroupLabel>
-                <SidebarGroupContent>
-                  <SidebarMenu>
-                    {link.subLinks?.map((sublink, index) => {
-                      return (
-                        <SidebarMenuItem key={index}>
-                          <SidebarMenuButton asChild>
-                            <a href={sublink.href}>
-                              {sublink.icon}
-                              <span>{sublink.label}</span>
-                            </a>
-                          </SidebarMenuButton>
-                        </SidebarMenuItem>
-                      );
-                    })}
-                  </SidebarMenu>
-                </SidebarGroupContent>
-              </SidebarGroup>
-            );
-          }
-          return (
-            <SidebarMenu key={i}>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <a href={link.href}>
-                    {link.icon}
-                    <span className="font-medium">{link.label}</span>
-                  </a>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          );
-        })}
+        {sections ? (
+          sections.map((section, sectionIndex) => (
+            <div key={sectionIndex}>
+              {section.title && (
+                <SidebarGroup>
+                  <SidebarGroupLabel className="text-xs text-muted-foreground uppercase tracking-wider font-semibold px-2 py-2">
+                    {section.title}
+                  </SidebarGroupLabel>
+                </SidebarGroup>
+              )}
+              {renderLinks(section.links)}
+              {sectionIndex < sections.length - 1 && <SidebarSeparator className="my-2" />}
+            </div>
+          ))
+        ) : (
+          links && renderLinks(links)
+        )}
       </SidebarContent>
     </Sidebar>
   );

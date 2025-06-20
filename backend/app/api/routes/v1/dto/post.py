@@ -40,3 +40,4 @@ class PostMutationDTO(BaseModel):
     published: bool
     archived: bool
     featured: bool
+    tag_ids: list[str]
