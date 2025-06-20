@@ -90,6 +90,12 @@ async def edit_post(
             )
         ],
     ).check()
+    tags = [
+        check_existence(
+            db_session.get(Tag, tag_id), detail=f"Tag {tag_id} not found."
+        )
+        for tag_id in data.tag_ids
+    ]
     post.title = data.title
     post.description = data.description
     post.cover = data.cover
@@ -97,6 +103,7 @@ async def edit_post(
     post.published = data.published
     post.archived = data.archived
     post.featured = data.featured
+    post.tags = tags
     db_session.add(post)
     db_session.commit()
     return post.to_dto()

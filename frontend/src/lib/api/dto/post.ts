@@ -34,4 +34,5 @@ export interface PostUpdateDTO {
   published: boolean;
   archived: boolean;
   featured: boolean;
+  tag_ids: string[];
 };

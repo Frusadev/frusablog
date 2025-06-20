@@ -189,6 +189,7 @@ export default function PostEditPage() {
       published,
       archived,
       featured,
+      tag_ids: selectedTags.map(tag => tag.id),
     };
     
     updateMutation.mutate(updateData);
