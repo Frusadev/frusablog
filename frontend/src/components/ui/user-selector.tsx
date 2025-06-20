@@ -3,10 +3,16 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Check, ChevronsUpDown, User, X, Search, Loader2 } from "lucide-react";
+import { Check, ChevronsUpDown, X, Search, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { searchUsers } from "@/lib/api/requests/user";
 import type { DetailedUserInfo } from "@/lib/api/dto/user";
@@ -20,7 +26,11 @@ interface UserSelectorProps {
   disabled?: boolean;
   className?: string;
   useSearch?: boolean; // Enable API search instead of client-side filtering
-  onSearch?: (query: string, skip: number, limit: number) => Promise<DetailedUserInfo[]>;
+  onSearch?: (
+    query: string,
+    skip: number,
+    limit: number,
+  ) => Promise<DetailedUserInfo[]>;
 }
 
 export function UserSelector({
@@ -38,11 +48,12 @@ export function UserSelector({
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<DetailedUserInfo[]>([]);
   const [isSearching, setIsSearching] = useState(false);
-  const [searchDebounceTimeout, setSearchDebounceTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [searchDebounceTimeout, setSearchDebounceTimeout] =
+    useState<NodeJS.Timeout | null>(null);
 
   const selectedUser = useMemo(() => {
     const allUsers = useSearch ? [...users, ...searchResults] : users;
-    return allUsers.find(user => user.id === value);
+    return allUsers.find((user) => user.id === value);
   }, [users, searchResults, value, useSearch]);
 
   // Use search results when using API search, otherwise use provided users with filtering
@@ -50,36 +61,40 @@ export function UserSelector({
     if (useSearch) {
       return searchQuery.trim() ? searchResults : users.slice(0, 20); // Show limited users when no search
     }
-    
+
     if (!searchQuery.trim()) return users;
-    
+
     const query = searchQuery.toLowerCase();
-    return users.filter(user => 
-      user.name.toLowerCase().includes(query) ||
-      user.username.toLowerCase().includes(query) ||
-      user.email.toLowerCase().includes(query)
+    return users.filter(
+      (user) =>
+        user.name.toLowerCase().includes(query) ||
+        user.username.toLowerCase().includes(query) ||
+        user.email.toLowerCase().includes(query),
     );
   }, [users, searchResults, searchQuery, useSearch]);
 
   // API search with debouncing
-  const performSearch = useCallback(async (query: string) => {
-    if (!useSearch || !query.trim()) {
-      setSearchResults([]);
-      return;
-    }
+  const performSearch = useCallback(
+    async (query: string) => {
+      if (!useSearch || !query.trim()) {
+        setSearchResults([]);
+        return;
+      }
 
-    setIsSearching(true);
-    try {
-      const searchFunction = onSearch || searchUsers;
-      const results = await searchFunction(query, 0, 50); // Get more results for dropdown
-      setSearchResults(results);
-    } catch (error) {
-      console.error("Search failed:", error);
-      setSearchResults([]);
-    } finally {
-      setIsSearching(false);
-    }
-  }, [useSearch, onSearch]);
+      setIsSearching(true);
+      try {
+        const searchFunction = onSearch || searchUsers;
+        const results = await searchFunction(query, 0, 50); // Get more results for dropdown
+        setSearchResults(results);
+      } catch (error) {
+        console.error("Search failed:", error);
+        setSearchResults([]);
+      } finally {
+        setIsSearching(false);
+      }
+    },
+    [useSearch, onSearch],
+  );
 
   // Handle search input changes with debouncing
   const handleSearchChange = (query: string) => {
@@ -109,7 +124,7 @@ export function UserSelector({
   const getInitials = (name: string) => {
     return name
       .split(" ")
-      .map(part => part.charAt(0))
+      .map((part) => part.charAt(0))
       .join("")
       .toUpperCase()
       .slice(0, 2);
@@ -175,7 +190,7 @@ export function UserSelector({
         <DialogHeader>
           <DialogTitle>Select User</DialogTitle>
         </DialogHeader>
-        
+
         <div className="space-y-4">
           {/* Search Input */}
           <div className="relative">
@@ -203,9 +218,9 @@ export function UserSelector({
                   key={user.id}
                   className={cn(
                     "flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors",
-                    value === user.id 
-                      ? "bg-primary/10 border-primary" 
-                      : "bg-card hover:bg-muted/50"
+                    value === user.id
+                      ? "bg-primary/10 border-primary"
+                      : "bg-card hover:bg-muted/50",
                   )}
                   onClick={() => handleSelect(user.id)}
                 >
@@ -214,10 +229,12 @@ export function UserSelector({
                       {getInitials(user.name)}
                     </AvatarFallback>
                   </Avatar>
-                  
+
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="font-medium text-sm truncate">{user.name}</span>
+                      <span className="font-medium text-sm truncate">
+                        {user.name}
+                      </span>
                       <Badge variant="outline" className="text-xs">
                         @{user.username}
                       </Badge>
@@ -226,7 +243,7 @@ export function UserSelector({
                       {user.email}
                     </p>
                   </div>
-                  
+
                   {value === user.id && (
                     <Check className="h-4 w-4 text-primary" />
                   )}

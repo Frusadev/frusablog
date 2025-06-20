@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,13 +19,17 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, UserX, Mail, Trash2, Search } from "lucide-react";
 import { toast } from "sonner";
-import { getUsers, banUser, deleteUser, mailUser } from "@/lib/api/requests/user";
+import {
+  getUsers,
+  banUser,
+  deleteUser,
+  mailUser,
+} from "@/lib/api/requests/user";
 import type { DetailedUserInfo, UserMessageSendDTO } from "@/lib/api/dto/user";
 import { format } from "date-fns";
 
@@ -37,7 +40,7 @@ export default function UsersPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredUsers, setFilteredUsers] = useState<DetailedUserInfo[]>([]);
-  
+
   // Ban user state
   const [banDialogOpen, setBanDialogOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
@@ -67,7 +70,7 @@ export default function UsersPage() {
         (user) =>
           user.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
           user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          user.email.toLowerCase().includes(searchQuery.toLowerCase())
+          user.email.toLowerCase().includes(searchQuery.toLowerCase()),
       );
       setFilteredUsers(filtered);
     }
@@ -111,7 +114,11 @@ export default function UsersPage() {
   };
 
   const handleDeleteUser = async (userId: string, username: string) => {
-    if (!confirm(`Are you sure you want to delete user "${username}"? This action cannot be undone.`)) {
+    if (
+      !confirm(
+        `Are you sure you want to delete user "${username}"? This action cannot be undone.`,
+      )
+    ) {
       return;
     }
 
@@ -283,12 +290,15 @@ export default function UsersPage() {
           <DialogHeader>
             <DialogTitle>Ban User</DialogTitle>
             <DialogDescription>
-              Provide a detailed reason for banning this user. This action will notify the user via email.
+              Provide a detailed reason for banning this user. This action will
+              notify the user via email.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="banMotive">Reason for Ban (minimum 100 characters)</Label>
+              <Label htmlFor="banMotive">
+                Reason for Ban (minimum 100 characters)
+              </Label>
               <Textarea
                 id="banMotive"
                 placeholder="Provide a detailed explanation for the ban..."
@@ -333,7 +343,10 @@ export default function UsersPage() {
                 placeholder="Message subject..."
                 value={messageData.mail_subject}
                 onChange={(e) =>
-                  setMessageData({ ...messageData, mail_subject: e.target.value })
+                  setMessageData({
+                    ...messageData,
+                    mail_subject: e.target.value,
+                  })
                 }
               />
             </div>
@@ -344,18 +357,26 @@ export default function UsersPage() {
                 placeholder="Your message..."
                 value={messageData.mail_content}
                 onChange={(e) =>
-                  setMessageData({ ...messageData, mail_content: e.target.value })
+                  setMessageData({
+                    ...messageData,
+                    mail_content: e.target.value,
+                  })
                 }
                 rows={4}
               />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setMessageDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setMessageDialogOpen(false)}
+            >
               Cancel
             </Button>
             <Button onClick={handleSendMessage} disabled={messageLoading}>
-              {messageLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {messageLoading && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
               Send Message
             </Button>
           </DialogFooter>

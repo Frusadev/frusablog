@@ -13,7 +13,6 @@ import {
   Tags,
   MessageSquare,
   Users,
-  UserCheck,
   UserX,
   Mail,
 } from "lucide-react";
