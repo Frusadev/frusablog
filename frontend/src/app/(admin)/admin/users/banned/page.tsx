@@ -12,7 +12,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Search, Mail } from "lucide-react";
+import { Loader2, Search } from "lucide-react";
 import { toast } from "sonner";
 import { getBannedUsers } from "@/lib/api/requests/user";
 import type { DetailedUserInfo } from "@/lib/api/dto/user";
@@ -40,7 +40,7 @@ export default function BannedUsersPage() {
         (user) =>
           user.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
           user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          user.email.toLowerCase().includes(searchQuery.toLowerCase())
+          user.email.toLowerCase().includes(searchQuery.toLowerCase()),
       );
       setFilteredUsers(filtered);
     }
