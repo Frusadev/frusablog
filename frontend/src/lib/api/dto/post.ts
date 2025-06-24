@@ -36,3 +36,19 @@ export interface PostUpdateDTO {
   featured: boolean;
   tag_ids: string[];
 };
+
+export interface PostTranslationResult {
+  title: string;
+  description: string;
+  content: string;
+}
+
+export type SupportedLanguages = 
+  | "English" 
+  | "French" 
+  | "Chinese" 
+  | "Japanese" 
+  | "Spanish" 
+  | "German";
+
+export type LanguageOption = SupportedLanguages | "Original";

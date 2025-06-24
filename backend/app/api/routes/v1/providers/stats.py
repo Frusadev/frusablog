@@ -3,7 +3,7 @@ from statistics import mean
 
 from sqlmodel import Session, func, select
 
-from app.api.routes.v1.dto.stats import GeneralStats
+from app.api.routes.v1.dto.stats import GeneralStats, PublicStats
 from app.core.db.models import Comment, Post, User, ViewAction, VisitAction
 from app.core.security.checkers import check_conditions
 from app.core.security.permissions import (
@@ -12,6 +12,34 @@ from app.core.security.permissions import (
     GlobalPermissionCheckModel,
     PermissionChecker,
 )
+
+
+async def get_public_stats(db_session: Session):
+    total_articles = db_session.exec(
+        select(func.count())
+        .select_from(Post)
+        .where(Post.published == True, Post.archived != False)
+    ).one()
+    featured_articles = db_session.exec(
+        select(func.count())
+        .select_from(Post)
+        .where(
+            Post.featured == True,
+            Post.published == True,
+            Post.archived == False,
+        )
+    ).one()
+    total_comments = db_session.exec(
+        select(func.count()).select_from(Comment)
+    ).one()
+
+    total_likes = db_session.exec(select(func.sum(Post.likes))).one()
+    return PublicStats(
+        total_likes=total_likes,
+        total_articles=total_articles,
+        total_comments=total_comments,
+        featured=featured_articles,
+    )
 
 
 async def get_general_stats(db_session: Session, current_user: User):
@@ -28,16 +56,16 @@ async def get_general_stats(db_session: Session, current_user: User):
 
     total_articles = db_session.exec(
         select(func.count()).select_from(Post)
-    ).first()
+    ).one()
     total_comments = db_session.exec(
         select(func.count()).select_from(Comment)
-    ).first()
+    ).one()
 
-    total_likes = sum(db_session.exec(select(Post.likes)).all())
+    total_likes = db_session.exec(select(func.sum(Post.likes))).one()
     return GeneralStats(
         total_likes=total_likes,
-        total_articles=total_articles or 0,
-        total_comments=total_comments or 0,
+        total_articles=total_articles,
+        total_comments=total_comments,
     )
 
 

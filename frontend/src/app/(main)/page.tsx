@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getPosts, getFeaturedPosts } from "@/lib/api/requests/post";
+import { getPublicStats } from "@/lib/api/requests/stats";
 import PostCard from "@/components/data/posts/PostCard";
 import Navigation from "@/components/layouts/Navigation";
 import { Button } from "@/components/ui/button";
@@ -43,12 +44,21 @@ export default function MainPage() {
     queryFn: () => getPosts({ skip, limit: POSTS_PER_PAGE }),
   });
 
+  // Fetch public stats
+  const statsQuery = useQuery({
+    queryKey: ["public-stats"],
+    queryFn: getPublicStats,
+    retry: 3,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
   const handleLoadMore = () => {
     setCurrentPage((prev) => prev + 1);
   };
 
   const featuredPosts = featuredQuery.data || [];
   const posts = postsQuery.data || [];
+  const stats = statsQuery.data;
   const hasMorePosts = posts.length === POSTS_PER_PAGE;
 
   return (
@@ -129,17 +139,17 @@ export default function MainPage() {
             </div>
 
             {/* Sidebar */}
-            <div className="space-y-8">
+            <div className="space-y-6 lg:space-y-8">
               {/* Featured Posts */}
               <Show when={featuredPosts.length > 0}>
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
+                <Card className="overflow-hidden">
+                  <CardHeader className="pb-4">
+                    <CardTitle className="flex items-center gap-2 text-lg">
                       <Star className="w-5 h-5 text-yellow-500 fill-current" />
                       Featured Posts
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4">
+                  <CardContent className="space-y-3">
                     {featuredPosts.slice(0, 3).map((post) => (
                       <div
                         key={post.id}
@@ -152,7 +162,7 @@ export default function MainPage() {
                       >
                         <div className="flex gap-3">
                           <Show when={!!post.cover}>
-                            <div className="w-16 h-16 bg-muted rounded-lg flex-shrink-0 overflow-hidden">
+                            <div className="w-12 h-12 sm:w-16 sm:h-16 bg-muted rounded-lg flex-shrink-0 overflow-hidden">
                               <Image
                                 src={
                                   getResourceUrl(post.cover) || "/nomedia.png"
@@ -169,27 +179,35 @@ export default function MainPage() {
                             </div>
                           </Show>
                           <div className="flex-1 min-w-0">
-                            <h4 className="font-medium line-clamp-2 group-hover:text-primary transition-colors">
+                            <h4 className="font-medium line-clamp-2 group-hover:text-primary transition-colors text-sm">
                               {post.title}
                             </h4>
-                            <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
-                              <User className="w-3 h-3" />
-                              <span>
+                            <div className="flex items-center gap-1.5 mt-1 text-xs text-muted-foreground">
+                              <User className="w-3 h-3 flex-shrink-0" />
+                              <span className="truncate">
                                 {post.author.name || post.author.username}
                               </span>
-                              <span>•</span>
-                              <span>{timeAgo(post.created_at)}</span>
+                              <span className="flex-shrink-0">•</span>
+                              <span className="flex-shrink-0">{timeAgo(post.created_at)}</span>
                             </div>
-                            <div className="flex items-center gap-1 mt-1">
-                              {post.tags?.slice(0, 2).map((tag) => (
-                                <Badge
-                                  key={tag.id}
-                                  variant="secondary"
-                                  className="text-xs px-1.5 py-0.5"
-                                >
-                                  {tag.name}
-                                </Badge>
-                              ))}
+                            <div className="flex items-center gap-1 mt-2 overflow-hidden">
+                              <div className="flex gap-1 min-w-0">
+                                {post.tags?.slice(0, 2).map((tag) => (
+                                  <Badge
+                                    key={tag.id}
+                                    variant="secondary"
+                                    className="text-xs px-1.5 py-0.5 truncate max-w-[80px]"
+                                    title={tag.name}
+                                  >
+                                    {tag.name}
+                                  </Badge>
+                                ))}
+                              </div>
+                              {(post.tags?.length || 0) > 2 && (
+                                <span className="text-xs text-muted-foreground flex-shrink-0">
+                                  +{(post.tags?.length || 0) - 2}
+                                </span>
+                              )}
                             </div>
                           </div>
                         </div>
@@ -200,23 +218,28 @@ export default function MainPage() {
               </Show>
 
               {/* Popular Tags */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
+              <Card className="overflow-hidden">
+                <CardHeader className="pb-4">
+                  <CardTitle className="flex items-center gap-2 text-lg">
                     <TrendingUp className="w-5 h-5 text-primary" />
                     Popular Topics
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto">
                     {Array.from(
                       new Set(
                         [...featuredPosts, ...posts]
                           .flatMap((post) => post.tags || [])
-                          .slice(0, 10),
+                          .slice(0, 15),
                       ),
                     ).map((tag) => (
-                      <Badge key={tag.id} variant="outline" className="text-xs">
+                      <Badge 
+                        key={tag.id} 
+                        variant="outline" 
+                        className="text-xs whitespace-nowrap max-w-[120px] truncate"
+                        title={tag.name}
+                      >
                         {tag.name}
                       </Badge>
                     ))}
@@ -225,44 +248,63 @@ export default function MainPage() {
               </Card>
 
               {/* Stats Card */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
+              <Card className="overflow-hidden">
+                <CardHeader className="pb-4">
+                  <CardTitle className="flex items-center gap-2 text-lg">
                     <Eye className="w-5 h-5 text-primary" />
                     Blog Stats
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-primary">
-                        {featuredPosts.length + posts.length}
+                  <Show when={statsQuery.isLoading}>
+                    <div className="flex justify-center py-4">
+                      <Spinner size="small" className="stroke-primary" />
+                    </div>
+                  </Show>
+                  <Show when={statsQuery.isError}>
+                    <div className="text-center py-4 text-muted-foreground">
+                      <p className="text-sm">Unable to load stats</p>
+                    </div>
+                  </Show>
+                  <Show when={!statsQuery.isLoading && !statsQuery.isError}>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-primary">
+                          {stats?.total_articles || 0}
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          Articles
+                        </div>
                       </div>
-                      <div className="text-sm text-muted-foreground">
-                        Articles
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-primary">
+                          {stats?.featured || 0}
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          Featured
+                        </div>
                       </div>
                     </div>
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-primary">
-                        {featuredPosts.length}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-primary">
+                          {stats?.total_likes || 0}
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          Total Likes
+                        </div>
                       </div>
-                      <div className="text-sm text-muted-foreground">
-                        Featured
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-primary">
+                          {stats?.total_comments || 0}
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          Comments
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-primary">
-                      {[...featuredPosts, ...posts].reduce(
-                        (sum, post) => sum + post.likes,
-                        0,
-                      )}
-                    </div>
-                    <div className="text-sm text-muted-foreground">
-                      Total Likes
-                    </div>
-                  </div>
-                </CardContent>{" "}
+                  </Show>
+                </CardContent>
               </Card>
             </div>
           </div>

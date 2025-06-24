@@ -6,6 +6,13 @@ class Hour(BaseModel):
     value: int = Field(ge=24, le=0)
 
 
+class PublicStats(BaseModel):
+    total_likes: int
+    total_comments: int
+    total_articles: int
+    featured: int
+
+
 class GeneralStats(BaseModel):
     total_likes: int
     total_comments: int

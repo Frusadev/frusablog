@@ -2,15 +2,17 @@
 
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getPost, likePost } from "@/lib/api/requests/post";
+import { getPost, likePost, translatePost } from "@/lib/api/requests/post";
 import { getPostComments, createComment, likeComment, deleteComment } from "@/lib/api/requests/comment";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Spinner } from "@/components/ui/Spinner";
 import { ShareButton } from "@/components/ui/share-button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import ThemeSwitch from "@/components/ui/custom/ThemeSwitch";
 import Show from "@/components/wrappers/Show";
-import { ArrowLeft, Calendar, User, Star, Heart, MessageSquare, Reply, Send, Trash2 } from "lucide-react";
+import { ArrowLeft, Calendar, User, Star, Heart, MessageSquare, Reply, Send, Trash2, Languages } from "lucide-react";
 import { timeAgo } from "@/lib/utils";
 import { extractIdFromSlug } from "@/lib/utils/slug";
 import { getResourceUrl } from "@/lib/utils/fileUtils";
@@ -24,6 +26,7 @@ import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
 import rehypeRaw from "rehype-raw";
 import { useViewTracking } from "@/hooks/useUserTracking";
+import type { SupportedLanguages, PostTranslationResult, LanguageOption } from "@/lib/api/dto/post";
 
 // Import highlight.js CSS for code syntax highlighting
 import "highlight.js/styles/github-dark.css";
@@ -45,6 +48,12 @@ export default function PostViewClient({ slug }: PostViewClientProps) {
   // State for post likes
   const [localLikes, setLocalLikes] = useState(0);
   const [isLiked, setIsLiked] = useState(false);
+
+  // State for translation
+  const [translatedContent, setTranslatedContent] = useState<PostTranslationResult | null>(null);
+  const [showTranslation, setShowTranslation] = useState(false);
+  const [selectedLanguage, setSelectedLanguage] = useState<LanguageOption>("Original");
+  const [translationCache, setTranslationCache] = useState<Record<SupportedLanguages, PostTranslationResult>>({} as Record<SupportedLanguages, PostTranslationResult>);
 
   // Initialize view tracking for this post
   useViewTracking();
@@ -110,6 +119,34 @@ export default function PostViewClient({ slug }: PostViewClientProps) {
     },
   });
 
+  // Translation mutation
+  const translatePostMutation = useMutation({
+    mutationFn: ({ language }: { language: SupportedLanguages }) => 
+      translatePost(postId, language),
+    onSuccess: (data, variables) => {
+      // Cache the translation
+      setTranslationCache(prev => ({
+        ...prev,
+        [variables.language]: data
+      }));
+      setTranslatedContent(data);
+      setShowTranslation(true);
+      toast.success("Post translated successfully!");
+    },
+    onError: (error) => {
+      console.error("Translation error:", error);
+      
+      // Handle specific error cases
+      if (error?.name === 'AbortError' || error?.message?.includes('aborted')) {
+        toast.error("Translation request was cancelled. Please try again.");
+      } else if (error?.message?.includes('network') || error?.message?.includes('fetch')) {
+        toast.error("Network error. Please check your connection and try again.");
+      } else {
+        toast.error("Failed to translate post. Please try again.");
+      }
+    },
+  });
+
   // Like comment mutation
   const likeCommentMutation = useMutation({
     mutationFn: likeComment,
@@ -163,6 +200,42 @@ export default function PostViewClient({ slug }: PostViewClientProps) {
         parentId,
       });
     }
+  };
+
+  const handleTranslatePost = (language: LanguageOption) => {
+    if (language === "Original") {
+      setShowTranslation(false);
+      setSelectedLanguage(language);
+      return;
+    }
+    
+    // Prevent multiple simultaneous translation requests
+    if (translatePostMutation.isPending) {
+      toast.warning("Translation in progress. Please wait...");
+      return;
+    }
+    
+    setSelectedLanguage(language);
+    
+    // Check if we already have this translation cached
+    if (translationCache[language]) {
+      setTranslatedContent(translationCache[language]);
+      setShowTranslation(true);
+      toast.success("Translation loaded from cache!");
+      return;
+    }
+    
+    // Reset previous translation when selecting a new language
+    if (selectedLanguage !== language) {
+      setTranslatedContent(null);
+      setShowTranslation(false);
+    }
+    
+    translatePostMutation.mutate({ language });
+  };
+
+  const handleToggleTranslation = () => {
+    setShowTranslation(!showTranslation);
   };
 
   const handleLikeComment = (commentId: string) => {
@@ -224,16 +297,18 @@ export default function PostViewClient({ slug }: PostViewClientProps) {
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8 max-w-4xl">
-        {/* Back Button */}
-        <div className="mb-6">
+        {/* Header with Back Button and Theme Switcher */}
+        <div className="mb-6 flex items-center justify-between gap-4">
           <Button
             onClick={() => router.back()}
             variant="ghost"
             className="flex items-center gap-2 text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="w-4 h-4" />
-            Back to articles
+            <span className="hidden sm:inline">Back to articles</span>
+            <span className="sm:hidden">Back</span>
           </Button>
+          <ThemeSwitch />
         </div>
 
         {/* Cover Image */}
@@ -269,12 +344,12 @@ export default function PostViewClient({ slug }: PostViewClientProps) {
           </div>
 
           <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 leading-tight">
-            {post.title}
+            {showTranslation && translatedContent && selectedLanguage !== "Original" ? translatedContent.title : post.title}
           </h1>
 
-          <Show when={!!post.description}>
+          <Show when={!!(showTranslation && translatedContent && selectedLanguage !== "Original" ? translatedContent.description : post.description)}>
             <p className="text-lg text-muted-foreground mb-6 leading-relaxed">
-              {post.description}
+              {showTranslation && translatedContent && selectedLanguage !== "Original" ? translatedContent.description : post.description}
             </p>
           </Show>
 
@@ -313,6 +388,53 @@ export default function PostViewClient({ slug }: PostViewClientProps) {
                 </Show>
                 <span>{localLikes} likes</span>
               </Button>
+              
+              {/* Translation Button with Language Selector */}
+              <div className="flex items-center gap-2">
+                <Select
+                  value={selectedLanguage}
+                  onValueChange={(value) => handleTranslatePost(value as LanguageOption)}
+                  disabled={translatePostMutation.isPending}
+                >
+                  <SelectTrigger className="w-auto min-w-[140px]" size="sm">
+                    <div className="flex items-center gap-2">
+                      <Show when={translatePostMutation.isPending}>
+                        <Spinner size="small" className="w-4 h-4 stroke-current" />
+                      </Show>
+                      <Show when={!translatePostMutation.isPending}>
+                        <Languages className="w-4 h-4" />
+                      </Show>
+                      <SelectValue placeholder="Language">
+                        {translatePostMutation.isPending ? "Translating..." : selectedLanguage}
+                      </SelectValue>
+                    </div>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Original">
+                      <span className="font-medium">Original</span>
+                    </SelectItem>
+                    <SelectItem value="English" disabled={translatePostMutation.isPending}>
+                      English
+                    </SelectItem>
+                    <SelectItem value="French" disabled={translatePostMutation.isPending}>
+                      Français (French)
+                    </SelectItem>
+                    <SelectItem value="Spanish" disabled={translatePostMutation.isPending}>
+                      Español (Spanish)
+                    </SelectItem>
+                    <SelectItem value="German" disabled={translatePostMutation.isPending}>
+                      Deutsch (German)
+                    </SelectItem>
+                    <SelectItem value="Chinese" disabled={translatePostMutation.isPending}>
+                      中文 (Chinese)
+                    </SelectItem>
+                    <SelectItem value="Japanese" disabled={translatePostMutation.isPending}>
+                      日本語 (Japanese)
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
               <ShareButton
                 title={post.title}
                 description={post.description}
@@ -324,6 +446,32 @@ export default function PostViewClient({ slug }: PostViewClientProps) {
 
         {/* Article Content */}
         <div className="mb-8">
+          {/* Translation Toggle */}
+          <Show when={!!translatedContent && selectedLanguage !== "Original"}>
+            <div className="mb-4 p-4 bg-muted/50 rounded-lg">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Languages className="w-4 h-4 text-primary" />
+                  <span className="text-sm font-medium">
+                    <Show when={showTranslation}>
+                      Content show in {selectedLanguage}
+                    </Show>
+                    <Show when={!showTranslation}>
+                      Translation available in {selectedLanguage}
+                    </Show>
+                  </span>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleToggleTranslation}
+                >
+                  {showTranslation ? "Show Original" : "Show Translation"}
+                </Button>
+              </div>
+            </div>
+          </Show>
+
           <div className="prose prose-lg prose-neutral dark:prose-invert max-w-none">
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
@@ -441,7 +589,7 @@ export default function PostViewClient({ slug }: PostViewClientProps) {
                   ),
                 }}
               >
-                {post.content}
+                {showTranslation && translatedContent && selectedLanguage !== "Original" ? translatedContent.content : post.content}
               </ReactMarkdown>
             </div>
         </div>
