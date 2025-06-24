@@ -15,7 +15,6 @@ import {
   UserX,
   Mail,
   BarChart3,
-  Settings,
   FileText,
 } from "lucide-react";
 import { Toaster } from "sonner";
@@ -40,18 +39,6 @@ export default function RootLayout({
         <SidebarProvider>
           <AdminSidebar
             sections={[
-              // Overview Section
-              {
-                title: "Overview",
-                links: [
-                  {
-                    label: "Dashboard",
-                    href: "/admin",
-                    icon: <BarChart3 />,
-                  },
-                ],
-              },
-
               // Content Management Section
               {
                 title: "Content",
@@ -140,18 +127,6 @@ export default function RootLayout({
                         icon: <BarChart3 />,
                       },
                     ],
-                  },
-                ],
-              },
-
-              // System Section
-              {
-                title: "System",
-                links: [
-                  {
-                    label: "Settings",
-                    href: "/admin/settings",
-                    icon: <Settings />,
                   },
                 ],
               },

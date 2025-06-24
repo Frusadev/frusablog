@@ -193,3 +193,24 @@ async def like_post(
     return await post_provider.like_post(
         db_session=db_session, current_user=current_user, post_id=post_id
     )
+
+
+@post_router.get("/post/{post_id}/views", response_model=int)
+async def get_post_views(
+    db_session: DBSessionDependency,
+    post_id: UUID,
+):
+    return await post_provider.post_views(
+        db_session=db_session, post_id=post_id
+    )
+
+
+@post_router.get("/post/{post_id}/liked", response_model=bool)
+async def check_has_liked(
+    db_session: DBSessionDependency,
+    current_user: Annotated[User | None, Depends(get_optional_current_user)],
+    post_id: UUID,
+):
+    return await post_provider.has_liked(
+        db_session=db_session, current_user=current_user, post_id=post_id
+    )
