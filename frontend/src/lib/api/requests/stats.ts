@@ -9,7 +9,28 @@ export interface GeneralStats {
   total_articles: number;
 }
 
+export interface PublicStats {
+  total_likes: number;
+  total_comments: number;
+  total_articles: number;
+  featured: number;
+}
+
 // API Functions
+export async function getPublicStats() {
+  const request = ky
+    .get<PublicStats>(`${API_URL}/stats/public`, {
+      credentials: "include",
+    })
+    .json();
+  const [response, error] = await resolveRequest(request);
+  if (error) {
+    console.error("Failed to fetch public stats:", error);
+    throw error;
+  }
+  return response;
+}
+
 export async function getGeneralStats() {
   const request = ky
     .get<GeneralStats>(`${API_URL}/stats/general`, {
