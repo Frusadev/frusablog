@@ -156,6 +156,7 @@ async def get_global_visits(
             .where(
                 VisitAction.created_at <= end,
                 VisitAction.created_at >= start,
+                VisitAction.visit_time >= 5
             )
         ).first()
         or 0
@@ -194,6 +195,7 @@ async def get_visits(
                 .where(
                     VisitAction.created_at >= day,
                     VisitAction.created_at <= day_end,
+                    VisitAction.visit_time > 1
                 )
             ).first()
             or 0
@@ -227,6 +229,7 @@ async def get_average_visit_time(
             select(VisitAction).where(
                 VisitAction.created_at >= day,
                 VisitAction.created_at <= day_end,
+                VisitAction.visit_time > 1
             )
         ).all()
         if visits:
