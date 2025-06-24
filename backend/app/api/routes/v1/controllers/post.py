@@ -9,6 +9,7 @@ from app.api.routes.v1.dto.post import (
     PostCreationDTO,
     PostDTO,
     PostMutationDTO,
+    PostTranslationResult,
 )
 from app.api.routes.v1.providers import post as post_provider
 from app.api.routes.v1.providers.auth.email import get_current_user
@@ -19,6 +20,7 @@ from app.api.routes.v1.providers.user_action import (
 )
 from app.core.db.models import User, ViewAction, VisitAction
 from app.core.db.setup import create_db_session
+from app.core.services.ai.translation import SupportedLanguages
 
 post_router = APIRouter(prefix="/v1")
 
@@ -143,6 +145,20 @@ async def create_post(
 ):
     return await post_provider.create_post(
         db_session=db_session, current_user=current_user, data=data
+    )
+
+
+@post_router.post(
+    "/post/{post_id}/translate", response_model=PostTranslationResult
+)
+async def translate_post(
+    db_session: DBSessionDependency,
+    post_id: UUID,
+    language: SupportedLanguages,
+):
+    """Translate a post to the specified language."""
+    return await post_provider.translate_post(
+        db_session=db_session, post_id=post_id, language=language
     )
 
 

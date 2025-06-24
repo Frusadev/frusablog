@@ -41,3 +41,9 @@ class PostMutationDTO(BaseModel):
     archived: bool
     featured: bool
     tag_ids: list[str]
+
+
+class PostTranslationResult(BaseModel):
+    title: str
+    description: str
+    content: str

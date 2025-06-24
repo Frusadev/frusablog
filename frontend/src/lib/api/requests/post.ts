@@ -1,7 +1,13 @@
 import { API_URL } from "@/lib/config/env";
 import ky from "ky";
 import { resolveRequest } from "../utils";
-import type { Post, PostUpdateDTO, PostCreationDTO } from "../dto/post";
+import type { 
+  Post, 
+  PostUpdateDTO, 
+  PostCreationDTO, 
+  PostTranslationResult, 
+  SupportedLanguages 
+} from "../dto/post";
 
 export async function updatePost(data: PostUpdateDTO) {
   const request = ky.put<Post>(`${API_URL}/post`, {
@@ -63,6 +69,33 @@ export async function likePost(postId: string) {
     throw error;
   }
   return response;
+}
+
+export async function translatePost(postId: string, language: SupportedLanguages) {
+  try {
+    const request = ky
+      .post<PostTranslationResult>(`${API_URL}/post/${postId}/translate`, {
+        searchParams: { language },
+        credentials: "include",
+        timeout: 60000, // 60 seconds timeout for translation
+        retry: {
+          limit: 2,
+          methods: ['post'],
+          statusCodes: [408, 413, 429, 500, 502, 503, 504]
+        }
+      })
+      .json();
+    
+    const [response, error] = await resolveRequest(request);
+    if (error) {
+      throw error;
+    }
+    console.log(response.content);
+    return response;
+  } catch (error) {
+    console.error("Translation request failed:", error);
+    throw error;
+  }
 }
 
 export async function toggleFeaturedPost(postId: string, featured: boolean) {

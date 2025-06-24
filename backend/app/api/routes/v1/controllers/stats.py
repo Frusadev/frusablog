@@ -4,7 +4,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Query
 from sqlmodel import Session
 
-from app.api.routes.v1.dto.stats import GeneralStats
+from app.api.routes.v1.dto.stats import GeneralStats, PublicStats
 from app.api.routes.v1.providers import stats as stats_provider
 from app.api.routes.v1.providers.auth.email import get_current_user
 from app.core.db.models import User
@@ -14,6 +14,12 @@ stats_router = APIRouter(prefix="/v1")
 
 DBSessionDependency = Annotated[Session, Depends(create_db_session)]
 CurrentUserDependency = Annotated[User, Depends(get_current_user)]
+
+
+@stats_router.get("/stats/public", response_model=PublicStats)
+async def get_public_stats(db_session: DBSessionDependency):
+    """Get public blog statistics including total articles, comments, likes, and featured posts."""
+    return await stats_provider.get_public_stats(db_session=db_session)
 
 
 @stats_router.get("/stats/general", response_model=GeneralStats)
@@ -102,3 +108,4 @@ async def get_average_view_time(
     return await stats_provider.get_average_view_time(
         db_session=db_session, current_user=current_user, start=start, end=end
     )
+
