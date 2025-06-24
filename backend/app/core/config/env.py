@@ -14,7 +14,8 @@ EnvKey = Literal[
     "DEBUG",
     "ALEMBIC_DB_URL",
     "DB_STRING",
-    "ADMIN_EMAIL"
+    "ADMIN_EMAIL",
+    "GEMINI_API_KEY"
 ]
 
 
