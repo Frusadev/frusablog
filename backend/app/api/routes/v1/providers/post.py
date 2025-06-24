@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from sqlmodel import Session, col, desc, or_, select
+from sqlmodel import Session, col, desc, func, or_, select
 
 from app.api.routes.v1.dto.message import MessageResponse
 from app.api.routes.v1.dto.post import (
@@ -9,7 +9,7 @@ from app.api.routes.v1.dto.post import (
     PostTranslationResult,
 )
 from app.core.db.builders.permission import PermissionBuilder
-from app.core.db.models import Post, Role, Tag, User
+from app.core.db.models import Post, Role, Tag, User, ViewAction
 from app.core.security.checkers import check_existence
 from app.core.security.permissions import (
     ACTION_READ,
@@ -81,6 +81,22 @@ async def translate_post(
         description=translated_description,
         content=translated_content,
     )
+
+
+async def has_liked(
+    db_session: Session, current_user: User | None, post_id: UUID
+):
+    post = check_existence(db_session.get(Post, post_id))
+    return current_user in post.liked_by
+
+
+async def post_views(db_session: Session, post_id: UUID):
+    views = db_session.exec(
+        select(func.count())
+        .select_from(ViewAction)
+        .where(ViewAction.post_id == post_id, ViewAction.view_time > 14)
+    ).one()
+    return views
 
 
 async def delete_post(db_session: Session, current_user: User, post_id: UUID):

@@ -290,3 +290,29 @@ export async function searchAllPosts({
   }
   return response;
 }
+
+export async function getPostViews(postId: string) {
+  const request = ky
+    .get<number>(`${API_URL}/post/${postId}/views`, {
+      credentials: "include",
+    })
+    .json();
+  const [response, error] = await resolveRequest(request);
+  if (error) {
+    throw error;
+  }
+  return response;
+}
+
+export async function checkHasLiked(postId: string) {
+  const request = ky
+    .get<boolean>(`${API_URL}/post/${postId}/liked`, {
+      credentials: "include",
+    })
+    .json();
+  const [response, error] = await resolveRequest(request);
+  if (error) {
+    throw error;
+  }
+  return response;
+}

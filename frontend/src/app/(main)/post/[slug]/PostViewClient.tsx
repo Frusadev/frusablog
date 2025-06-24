@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getPost, likePost, translatePost } from "@/lib/api/requests/post";
+import { getPost, likePost, translatePost, getPostViews, checkHasLiked } from "@/lib/api/requests/post";
 import { getPostComments, createComment, likeComment, deleteComment } from "@/lib/api/requests/comment";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -12,8 +12,8 @@ import { ShareButton } from "@/components/ui/share-button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import ThemeSwitch from "@/components/ui/custom/ThemeSwitch";
 import Show from "@/components/wrappers/Show";
-import { ArrowLeft, Calendar, User, Star, Heart, MessageSquare, Reply, Send, Trash2, Languages } from "lucide-react";
-import { timeAgo } from "@/lib/utils";
+import { ArrowLeft, Calendar, User, Star, Heart, MessageSquare, Reply, Send, Trash2, Languages, Eye } from "lucide-react";
+import { timeAgo, formatNumber } from "@/lib/utils";
 import { extractIdFromSlug } from "@/lib/utils/slug";
 import { getResourceUrl } from "@/lib/utils/fileUtils";
 import { useRouter } from "next/navigation";
@@ -74,6 +74,20 @@ export default function PostViewClient({ slug }: PostViewClientProps) {
     enabled: !!postId,
   });
 
+  // Fetch post views
+  const { data: views = 0 } = useQuery({
+    queryKey: ["post-views", postId],
+    queryFn: () => getPostViews(postId),
+    enabled: !!postId,
+  });
+
+  // Check if current user has liked this post
+  const { data: hasLiked = false } = useQuery({
+    queryKey: ["post-liked", postId, currentUser?.id],
+    queryFn: () => checkHasLiked(postId),
+    enabled: !!postId && !!currentUser,
+  });
+
   // Update local likes when post data changes
   useEffect(() => {
     if (post) {
@@ -81,25 +95,38 @@ export default function PostViewClient({ slug }: PostViewClientProps) {
     }
   }, [post]);
 
+  // Update isLiked state when hasLiked data changes
+  useEffect(() => {
+    setIsLiked(hasLiked);
+  }, [hasLiked]);
+
   // Like post mutation
   const likePostMutation = useMutation({
     mutationFn: () => likePost(postId),
     onMutate: async () => {
       // Optimistic update
-      setIsLiked(true);
-      setLocalLikes(prev => prev + 1);
+      const previousIsLiked = isLiked;
+      const previousLikes = localLikes;
+      
+      setIsLiked(!previousIsLiked);
+      setLocalLikes(prev => previousIsLiked ? prev - 1 : prev + 1);
+      
+      return { previousIsLiked, previousLikes };
     },
     onSuccess: (data) => {
       setLocalLikes(data.likes);
-      // Invalidate and refetch post data
+      // Invalidate and refetch queries
       queryClient.invalidateQueries({ queryKey: ["post", postId] });
+      queryClient.invalidateQueries({ queryKey: ["post-liked", postId, currentUser?.id] });
       queryClient.invalidateQueries({ queryKey: ["posts"] });
       queryClient.invalidateQueries({ queryKey: ["featured-posts"] });
     },
-    onError: () => {
+    onError: (error, variables, context) => {
       // Revert optimistic update
-      setIsLiked(false);
-      setLocalLikes(post?.likes || 0);
+      if (context) {
+        setIsLiked(context.previousIsLiked);
+        setLocalLikes(context.previousLikes);
+      }
       toast.error("Failed to like post. Please try again.");
     },
   });
@@ -300,7 +327,7 @@ export default function PostViewClient({ slug }: PostViewClientProps) {
         {/* Header with Back Button and Theme Switcher */}
         <div className="mb-6 flex items-center justify-between gap-4">
           <Button
-            onClick={() => router.back()}
+            onClick={() => router.push("/")}
             variant="ghost"
             className="flex items-center gap-2 text-muted-foreground hover:text-foreground"
           >
@@ -366,6 +393,10 @@ export default function PostViewClient({ slug }: PostViewClientProps) {
                 <Calendar className="w-4 h-4" />
                 <span className="text-sm">{timeAgo(post.created_at)}</span>
               </div>
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Eye className="w-4 h-4" />
+                <span className="text-sm">{formatNumber(views)} views</span>
+              </div>
             </div>
 
             <div className="flex items-center gap-2">
@@ -373,7 +404,7 @@ export default function PostViewClient({ slug }: PostViewClientProps) {
                 variant="ghost"
                 size="sm"
                 onClick={handleLikePost}
-                disabled={likePostMutation.isPending || isLiked}
+                disabled={likePostMutation.isPending}
                 className={`flex items-center gap-2 transition-colors ${
                   isLiked 
                     ? 'text-red-500 hover:text-red-600' 
@@ -384,7 +415,7 @@ export default function PostViewClient({ slug }: PostViewClientProps) {
                   <Spinner size="small" className="w-4 h-4 stroke-current" />
                 </Show>
                 <Show when={!likePostMutation.isPending}>
-                  <Heart className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
+                  <Heart className={`w-4 h-4 ${isLiked ? 'fill-red-500 text-red-500' : ''}`} />
                 </Show>
                 <span>{localLikes} likes</span>
               </Button>
@@ -454,7 +485,7 @@ export default function PostViewClient({ slug }: PostViewClientProps) {
                   <Languages className="w-4 h-4 text-primary" />
                   <span className="text-sm font-medium">
                     <Show when={showTranslation}>
-                      Content show in {selectedLanguage}
+                      Content shown in {selectedLanguage}
                     </Show>
                     <Show when={!showTranslation}>
                       Translation available in {selectedLanguage}
@@ -841,7 +872,7 @@ export default function PostViewClient({ slug }: PostViewClientProps) {
                 variant="ghost"
                 size="sm"
                 onClick={handleLikePost}
-                disabled={likePostMutation.isPending || isLiked}
+                disabled={likePostMutation.isPending}
                 className={`flex items-center gap-2 transition-colors ${
                   isLiked 
                     ? 'text-red-500 hover:text-red-600' 
@@ -852,7 +883,7 @@ export default function PostViewClient({ slug }: PostViewClientProps) {
                   <Spinner size="small" className="w-4 h-4 stroke-current" />
                 </Show>
                 <Show when={!likePostMutation.isPending}>
-                  <Heart className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
+                  <Heart className={`w-4 h-4 ${isLiked ? 'fill-red-500 text-red-500' : ''}`} />
                 </Show>
                 <span>{localLikes} likes</span>
               </Button>
