@@ -18,7 +18,7 @@ async def get_public_stats(db_session: Session):
     total_articles = db_session.exec(
         select(func.count())
         .select_from(Post)
-        .where(Post.published == True, Post.archived != False)
+        .where(Post.published == True, Post.archived == False)
     ).one()
     featured_articles = db_session.exec(
         select(func.count())
