@@ -3,7 +3,11 @@ from uuid import UUID
 from sqlmodel import Session, col, desc, or_, select
 
 from app.api.routes.v1.dto.message import MessageResponse
-from app.api.routes.v1.dto.post import PostCreationDTO, PostMutationDTO
+from app.api.routes.v1.dto.post import (
+    PostCreationDTO,
+    PostMutationDTO,
+    PostTranslationResult,
+)
 from app.core.db.builders.permission import PermissionBuilder
 from app.core.db.models import Post, Role, Tag, User
 from app.core.security.checkers import check_existence
@@ -15,6 +19,8 @@ from app.core.security.permissions import (
     PermissionChecker,
     PermissionCheckModel,
 )
+from app.core.services.ai import translation as translation_service
+from app.core.services.ai.translation import SupportedLanguages
 
 
 async def create_post(
@@ -55,6 +61,26 @@ async def create_post(
     db_session.add_all([post, write_role, write_permission])
     db_session.commit()
     return post.to_dto()
+
+
+async def translate_post(
+    db_session: Session, post_id: UUID, language: SupportedLanguages
+):
+    post = check_existence(db_session.get(Post, post_id))
+    translated_title = await translation_service.translate(
+        text=post.title, language=language
+    )
+    translated_description = await translation_service.translate(
+        text=post.description, language=language
+    )
+    translated_content = await translation_service.translate(
+        text=post.content, language=language
+    )
+    return PostTranslationResult(
+        title=translated_title,
+        description=translated_description,
+        content=translated_content,
+    )
 
 
 async def delete_post(db_session: Session, current_user: User, post_id: UUID):
