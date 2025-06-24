@@ -11,12 +11,14 @@ import { Spinner } from "@/components/ui/Spinner";
 import Show from "@/components/wrappers/Show";
 import { Post } from "@/lib/api/dto/post";
 import { getFileURL } from "@/lib/api/requests/file";
-import { likePost } from "@/lib/api/requests/post";
+import { likePost, checkHasLiked } from "@/lib/api/requests/post";
 import { timeAgo } from "@/lib/utils";
+import { useOptionalCurrentUser } from "@/hooks/useAuth";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Heart, Star } from "lucide-react";
 import Image from "next/image";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
+import { SERVER_URL } from "@/lib/config/env";
 
 export interface PostCardProps {
   orientation?: "grid" | "list";
@@ -31,34 +33,62 @@ export default function PostCard({
   const [localLikes, setLocalLikes] = useState(post.likes);
   const [isLiked, setIsLiked] = useState(false);
   const queryClient = useQueryClient();
-  
+
+  // Get current user (optional - doesn't throw if not authenticated)
+  const { data: currentUser } = useOptionalCurrentUser();
+
   const postCover = useQuery({
     queryKey: ["/resources", post.cover],
     queryFn: ({ queryKey }) => getFileURL(queryKey[1]),
   });
 
+  // Check if current user has liked this post
+  const { data: hasLiked = false } = useQuery({
+    queryKey: ["post-liked", post.id, currentUser?.id],
+    queryFn: () => checkHasLiked(post.id),
+    enabled: !!currentUser && showLikeButton,
+  });
+
+  // Update local likes when post data changes
+  useEffect(() => {
+    setLocalLikes(post.likes);
+  }, [post.likes]);
+
+  // Update isLiked state when hasLiked data changes
+  useEffect(() => {
+    setIsLiked(hasLiked);
+  }, [hasLiked]);
+
   const likeMutation = useMutation({
     mutationFn: () => likePost(post.id),
     onMutate: async () => {
       // Optimistic update
-      setIsLiked(true);
-      setLocalLikes(prev => prev + 1);
+      const previousIsLiked = isLiked;
+      const previousLikes = localLikes;
+      
+      setIsLiked(!previousIsLiked);
+      setLocalLikes(prev => previousIsLiked ? prev - 1 : prev + 1);
+      
+      return { previousIsLiked, previousLikes };
     },
     onSuccess: (data) => {
       setLocalLikes(data.likes);
-      // Invalidate and refetch posts
+      // Invalidate and refetch queries
+      queryClient.invalidateQueries({ queryKey: ["post-liked", post.id, currentUser?.id] });
       queryClient.invalidateQueries({ queryKey: ["posts"] });
       queryClient.invalidateQueries({ queryKey: ["featured-posts"] });
     },
-    onError: () => {
+    onError: (error, variables, context) => {
       // Revert optimistic update
-      setIsLiked(false);
-      setLocalLikes(post.likes);
+      if (context) {
+        setIsLiked(context.previousIsLiked);
+        setLocalLikes(context.previousLikes);
+      }
     },
   });
 
   const coverContainerRef = useRef<HTMLDivElement>(null);
-  const coverWidth = coverContainerRef.current?.clientWidth ?? 300
+  const coverWidth = coverContainerRef.current?.clientWidth ?? 300;
   return (
     <>
       <Card
@@ -73,29 +103,13 @@ export default function PostCard({
                 className="rounded-xl w-full sm:w-32 h-48 sm:h-24 overflow-hidden"
                 ref={coverContainerRef}
               >
-                <Show when={postCover.isLoading}>
-                  <div className="w-full h-full flex items-center justify-center bg-muted">
-                    <Spinner size={"small"} className="stroke-foreground" />
-                  </div>
-                </Show>
-                <Show when={postCover.data === undefined}>
-                  <Image
-                    src={"/nomedia.png"}
-                    alt="Post Cover"
-                    width={128}
-                    height={96}
-                    className="w-full h-full object-cover"
-                  />
-                </Show>
-                <Show when={postCover.data !== undefined}>
-                  <Image
-                    src={postCover.data ?? "/nomedia.png"}
-                    alt="Post Cover"
-                    width={128}
-                    height={96}
-                    className="w-full h-full object-cover"
-                  />
-                </Show>
+                <Image
+                  src={`${SERVER_URL}/v1/resources/${post.cover}`}
+                  alt="Post Cover"
+                  width={128}
+                  height={96}
+                  className="w-full h-full object-cover"
+                />
               </div>
             </div>
             <div className="flex-1 min-w-0">
@@ -103,7 +117,10 @@ export default function PostCard({
                 <h3 className="text-lg font-semibold cursor-default flex items-center gap-2 line-clamp-2">
                   {post.title || "Untitled Post"}
                   <Show when={!!post.featured}>
-                    <Badge variant="secondary" className="flex items-center gap-1 flex-shrink-0">
+                    <Badge
+                      variant="secondary"
+                      className="flex items-center gap-1 flex-shrink-0"
+                    >
                       <Star className="w-3 h-3 fill-current" />
                       Featured
                     </Badge>
@@ -126,10 +143,16 @@ export default function PostCard({
                         e.stopPropagation();
                         likeMutation.mutate();
                       }}
-                      disabled={likeMutation.isPending || isLiked}
-                      className="flex items-center gap-1 text-muted-foreground hover:text-red-500 transition-colors"
+                      disabled={likeMutation.isPending}
+                      className={`flex items-center gap-1 transition-colors ${
+                        isLiked 
+                          ? 'text-red-500 hover:text-red-600' 
+                          : 'text-muted-foreground hover:text-red-500'
+                      }`}
                     >
-                      <Heart className={`w-4 h-4 ${isLiked ? 'fill-red-500 text-red-500' : ''}`} />
+                      <Heart
+                        className={`w-4 h-4 ${isLiked ? "fill-red-500 text-red-500" : ""}`}
+                      />
                       <span className="text-sm">{localLikes}</span>
                     </Button>
                   </div>
@@ -147,7 +170,7 @@ export default function PostCard({
             </div>
           </div>
         </Show>
-        
+
         <Show when={cardOrientation === "grid"}>
           <CardHeader>
             <div
@@ -202,10 +225,16 @@ export default function PostCard({
                     variant="ghost"
                     size="sm"
                     onClick={() => likeMutation.mutate()}
-                    disabled={likeMutation.isPending || isLiked}
-                    className="flex items-center gap-1 text-muted-foreground hover:text-red-500 transition-colors"
+                    disabled={likeMutation.isPending}
+                    className={`flex items-center gap-1 transition-colors ${
+                      isLiked 
+                        ? 'text-red-500 hover:text-red-600' 
+                        : 'text-muted-foreground hover:text-red-500'
+                    }`}
                   >
-                    <Heart className={`w-4 h-4 ${isLiked ? 'fill-red-500 text-red-500' : ''}`} />
+                    <Heart
+                      className={`w-4 h-4 ${isLiked ? "fill-red-500 text-red-500" : ""}`}
+                    />
                     <span className="text-sm">{localLikes}</span>
                   </Button>
                 </div>
@@ -249,10 +278,16 @@ export default function PostCard({
                     variant="ghost"
                     size="sm"
                     onClick={() => likeMutation.mutate()}
-                    disabled={likeMutation.isPending || isLiked}
-                    className="flex items-center gap-1 text-muted-foreground hover:text-red-500 transition-colors"
+                    disabled={likeMutation.isPending}
+                    className={`flex items-center gap-1 transition-colors ${
+                      isLiked 
+                        ? 'text-red-500 hover:text-red-600' 
+                        : 'text-muted-foreground hover:text-red-500'
+                    }`}
                   >
-                    <Heart className={`w-4 h-4 ${isLiked ? 'fill-red-500 text-red-500' : ''}`} />
+                    <Heart
+                      className={`w-4 h-4 ${isLiked ? "fill-red-500 text-red-500" : ""}`}
+                    />
                     <span className="text-sm">{localLikes}</span>
                   </Button>
                 </div>
