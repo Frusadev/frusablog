@@ -1,39 +1,12 @@
-# ---- Build Stage ----
-FROM gplane/pnpm:node22-bullseye AS builder
+FROM oven/bun:debian
 
-# Create non-root user
-RUN useradd -m frontend
-USER frontend
+RUN useradd -m app
+USER app
+WORKDIR /home/app/app
 
-# Set workdir
-WORKDIR /home/frontend/app
+COPY --chown=app:app . .
 
-# Copy dependency files first (for better caching)
-COPY --chown=frontend:frontend package.json pnpm-lock.yaml ./
-
-# Install dependencies
-RUN pnpm install
-
-# Copy rest of the app
-COPY --chown=frontend:frontend . ./
-
-# Build app
-RUN pnpm run build
-
-
-
-# ---- Production Stage ----
-FROM gplane/pnpm:node22-bullseye AS production
-
-# Create non-root user
-RUN useradd -m runner
-USER runner
-
-WORKDIR /home/runner/app
-
-# Copy built app from builder
-COPY --from=builder --chown=runner:runner /home/frontend/app /home/runner/app
-
+RUN bun install
+RUN bun run build
 EXPOSE 3000
-
-CMD ["pnpm", "run", "start"]
+CMD ["bun", "run", "start"]

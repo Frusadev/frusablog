@@ -2,9 +2,9 @@
 typeCheckingMode = "standard"
 
 [project]
-name = "fastapi-template"
+name = "frusablog"
 version = "0.1.0"
-description = "Add your description here"
+description = "A fullstack blogging platform built with FastAPI."
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
