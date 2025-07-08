@@ -46,7 +46,7 @@ def check_existences[T](
     ws_code: int = status.WS_1008_POLICY_VIOLATION,
 ) -> list[T | None]:
     for instance in instances:
-        if not instances:
+        if not instance:
             if is_ws:
                 raise WebSocketException(code=ws_code, reason=detail)
             raise HTTPException(status_code=status_code, detail=detail)
