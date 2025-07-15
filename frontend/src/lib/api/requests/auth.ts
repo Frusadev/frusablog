@@ -43,3 +43,16 @@ export async function authenticate(authSessionId: string) {
   }
   return response;
 }
+
+export async function logout() {
+  const request = ky
+    .post<BackendMessage>(`${API_URL}/auth/email/logout`, {
+      credentials: "include",
+    })
+    .json();
+  const [response, error] = await resolveRequest(request);
+  if (error) {
+    throw new Error(error.detail);
+  }
+  return response;
+}
