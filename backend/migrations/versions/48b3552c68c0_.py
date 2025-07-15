@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: c864ee50e431
-Revises: 447e72510544
-Create Date: 2025-05-31 13:34:01.931779
+Revision ID: 48b3552c68c0
+Revises: 
+Create Date: 2025-07-15 10:30:33.972246
 
 """
 from typing import Sequence, Union
@@ -13,8 +13,8 @@ import sqlmodel
 
 
 # revision identifiers, used by Alembic.
-revision: str = 'c864ee50e431'
-down_revision: Union[str, None] = '447e72510544'
+revision: str = '48b3552c68c0'
+down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
@@ -37,6 +37,9 @@ def upgrade() -> None:
     sa.Column('email', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
     sa.Column('username', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
     sa.Column('name', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+    sa.Column('joined_at', sa.DateTime(), nullable=False),
+    sa.Column('banned', sa.Boolean(), nullable=False),
+    sa.Column('last_ban_motive', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('authsession',
@@ -44,6 +47,16 @@ def upgrade() -> None:
     sa.Column('user_id', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
     sa.Column('expires_at', sa.DateTime(), nullable=False),
     sa.Column('expired', sa.Boolean(), nullable=False),
+    sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
+    sa.PrimaryKeyConstraint('id')
+    )
+    op.create_table('fileresource',
+    sa.Column('id', sa.Uuid(), nullable=False),
+    sa.Column('user_id', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+    sa.Column('protected', sa.Boolean(), nullable=False),
+    sa.Column('name', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+    sa.Column('filetype', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+    sa.Column('created_at', sa.DateTime(), nullable=False),
     sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
@@ -64,10 +77,15 @@ def upgrade() -> None:
     )
     op.create_table('post',
     sa.Column('id', sa.Uuid(), nullable=False),
+    sa.Column('title', sqlmodel.sql.sqltypes.AutoString(length=100), nullable=False),
+    sa.Column('description', sqlmodel.sql.sqltypes.AutoString(length=400), nullable=False),
     sa.Column('content', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+    sa.Column('cover', sa.Uuid(), nullable=True),
     sa.Column('created_at', sa.DateTime(), nullable=False),
+    sa.Column('likes', sa.Integer(), nullable=False),
     sa.Column('published', sa.Boolean(), nullable=False),
     sa.Column('archived', sa.Boolean(), nullable=False),
+    sa.Column('featured', sa.Boolean(), nullable=False),
     sa.Column('user_id', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
     sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
     sa.PrimaryKeyConstraint('id')
@@ -79,14 +97,24 @@ def upgrade() -> None:
     sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
     sa.PrimaryKeyConstraint('user_id', 'role_id')
     )
+    op.create_table('visitaction',
+    sa.Column('id', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+    sa.Column('user_id', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
+    sa.Column('created_at', sa.DateTime(), nullable=False),
+    sa.Column('visit_time', sa.Integer(), nullable=False),
+    sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
+    sa.PrimaryKeyConstraint('id')
+    )
     op.create_table('comment',
     sa.Column('id', sa.Uuid(), nullable=False),
     sa.Column('content', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+    sa.Column('likes', sa.Integer(), nullable=False),
+    sa.Column('level', sa.Integer(), nullable=False),
     sa.Column('created_at', sa.DateTime(), nullable=False),
-    sa.Column('parend_id', sa.Uuid(), nullable=False),
+    sa.Column('parent_id', sa.Uuid(), nullable=True),
     sa.Column('user_id', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
     sa.Column('post_id', sa.Uuid(), nullable=False),
-    sa.ForeignKeyConstraint(['parend_id'], ['comment.id'], ),
+    sa.ForeignKeyConstraint(['parent_id'], ['comment.id'], ),
     sa.ForeignKeyConstraint(['post_id'], ['post.id'], ),
     sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
     sa.PrimaryKeyConstraint('id')
@@ -98,18 +126,45 @@ def upgrade() -> None:
     sa.ForeignKeyConstraint(['tag_id'], ['tag.id'], ),
     sa.PrimaryKeyConstraint('post_id', 'tag_id')
     )
+    op.create_table('userpostlikelink',
+    sa.Column('user_id', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+    sa.Column('post_id', sa.Uuid(), nullable=False),
+    sa.ForeignKeyConstraint(['post_id'], ['post.id'], ),
+    sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
+    sa.PrimaryKeyConstraint('user_id', 'post_id')
+    )
+    op.create_table('viewaction',
+    sa.Column('id', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+    sa.Column('post_id', sa.Uuid(), nullable=False),
+    sa.Column('created_at', sa.DateTime(), nullable=False),
+    sa.Column('view_time', sa.Integer(), nullable=False),
+    sa.ForeignKeyConstraint(['post_id'], ['post.id'], ),
+    sa.PrimaryKeyConstraint('id')
+    )
+    op.create_table('usercommentlikelink',
+    sa.Column('comment_id', sa.Uuid(), nullable=False),
+    sa.Column('user_id', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+    sa.ForeignKeyConstraint(['comment_id'], ['comment.id'], ),
+    sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
+    sa.PrimaryKeyConstraint('comment_id', 'user_id')
+    )
     # ### end Alembic commands ###
 
 
 def downgrade() -> None:
     """Downgrade schema."""
     # ### commands auto generated by Alembic - please adjust! ###
+    op.drop_table('usercommentlikelink')
+    op.drop_table('viewaction')
+    op.drop_table('userpostlikelink')
     op.drop_table('posttaglink')
     op.drop_table('comment')
+    op.drop_table('visitaction')
     op.drop_table('roleuserlink')
     op.drop_table('post')
     op.drop_table('permission')
     op.drop_table('loginsession')
+    op.drop_table('fileresource')
     op.drop_table('authsession')
     op.drop_table('user')
     op.drop_table('tag')
