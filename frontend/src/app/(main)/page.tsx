@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getPosts, getFeaturedPosts } from "@/lib/api/requests/post";
 import { getPublicStats } from "@/lib/api/requests/stats";
@@ -11,8 +11,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Spinner } from "@/components/ui/Spinner";
 import PostSearchInfinite from "@/components/ui/custom/PostSearchInfinite";
+import ClickableTag from "@/components/ui/custom/ClickableTag";
 import Show from "@/components/wrappers/Show";
-import { Star, TrendingUp, Calendar, User, Eye } from "lucide-react";
+import {
+  Star,
+  TrendingUp,
+  Calendar,
+  User,
+  Eye,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import { timeAgo } from "@/lib/utils";
 import { getResourceUrl } from "@/lib/utils/fileUtils";
 import { createPostSlug } from "@/lib/utils/slug";
@@ -24,6 +33,8 @@ const POSTS_PER_PAGE = 8;
 
 export default function MainPage() {
   const [currentPage, setCurrentPage] = useState(1);
+  const [currentFeaturedIndex, setCurrentFeaturedIndex] = useState(0);
+  const [isCarouselPaused, setIsCarouselPaused] = useState(false);
   const router = useRouter();
 
   // Initialize visit tracking for the main page
@@ -61,6 +72,41 @@ export default function MainPage() {
   const stats = statsQuery.data;
   const hasMorePosts = posts.length === POSTS_PER_PAGE;
 
+  // Auto-rotate featured posts every 5 seconds (pause on hover)
+  useEffect(() => {
+    if (featuredPosts.length <= 1 || isCarouselPaused) return;
+
+    const interval = setInterval(() => {
+      setCurrentFeaturedIndex((prev) =>
+        prev === featuredPosts.length - 1 ? 0 : prev + 1,
+      );
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [featuredPosts.length, isCarouselPaused]);
+
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (featuredPosts.length <= 1) return;
+
+      if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        setCurrentFeaturedIndex((prev) =>
+          prev === 0 ? featuredPosts.length - 1 : prev - 1,
+        );
+      } else if (e.key === "ArrowRight") {
+        e.preventDefault();
+        setCurrentFeaturedIndex((prev) =>
+          prev === featuredPosts.length - 1 ? 0 : prev + 1,
+        );
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [featuredPosts.length]);
+
   return (
     <div>
       <Navigation />
@@ -68,13 +114,230 @@ export default function MainPage() {
         <div className="container mx-auto px-4 py-8 max-w-7xl">
           {/* Header with Search */}
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8">
-            <div className="flex items-center gap-2">
-              <h1 className="text-3xl font-bold">Welcome to the Blog</h1>
-            </div>
             <div className="w-full sm:w-auto">
               <PostSearchInfinite />
             </div>
           </div>
+
+          {/* Featured Posts Section */}
+          <Show when={!featuredQuery.isLoading && featuredPosts.length > 0}>
+            <div className="mb-12">
+              <div className="text-center mb-8">
+                <h2 className="text-3xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">
+                  Featured Stories
+                </h2>
+                <p className="text-muted-foreground max-w-2xl mx-auto">
+                  Discover my most compelling articles, handpicked for their insight and impact
+                </p>
+              </div>
+
+              <div className="relative">
+                {/* Main Featured Post */}
+                <div className="mb-6">
+                  <Card
+                    className="overflow-hidden border-2 border-border/50 shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-muted/20 to-background"
+                    onMouseEnter={() => setIsCarouselPaused(true)}
+                    onMouseLeave={() => setIsCarouselPaused(false)}
+                  >
+                    <div className="grid grid-cols-1 lg:grid-cols-2 min-h-[400px]">
+                      {/* Image Section */}
+                      <div className="relative overflow-hidden bg-muted">
+                        <div className="transition-all duration-500 ease-in-out">
+                          <Show
+                            when={!!featuredPosts[currentFeaturedIndex]?.cover}
+                          >
+                            <Image
+                              src={
+                                getResourceUrl(
+                                  featuredPosts[currentFeaturedIndex]?.cover,
+                                ) || "/nomedia.png"
+                              }
+                              alt={
+                                featuredPosts[currentFeaturedIndex]?.title ||
+                                "Featured post"
+                              }
+                              width={600}
+                              height={400}
+                              className="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).src =
+                                  "/nomedia.png";
+                              }}
+                            />
+                          </Show>
+                          <Show
+                            when={!featuredPosts[currentFeaturedIndex]?.cover}
+                          >
+                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-muted/50">
+                              <div className="text-center">
+                                <Star className="w-16 h-16 mx-auto mb-2 text-muted-foreground" />
+                                <p className="text-muted-foreground">
+                                  Featured Article
+                                </p>
+                              </div>
+                            </div>
+                          </Show>
+                        </div>
+
+                        {/* Featured Badge */}
+                        <div className="absolute top-4 left-4">
+                          <Badge className="bg-primary/90 text-primary-foreground border-none shadow-lg">
+                            <Star className="w-3 h-3 mr-1 fill-current" />
+                            Featured
+                          </Badge>
+                        </div>
+                      </div>
+
+                      {/* Content Section */}
+                      <div className="p-8 flex flex-col justify-center">
+                        <div className="space-y-4 transition-all duration-500 ease-in-out">
+                          <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                            <div className="flex items-center gap-2">
+                              <User className="w-4 h-4" />
+                              <span>
+                                {featuredPosts[currentFeaturedIndex]?.author
+                                  ?.name ||
+                                  featuredPosts[currentFeaturedIndex]?.author
+                                    ?.username}
+                              </span>
+                            </div>
+                            <span>•</span>
+                            <div className="flex items-center gap-2">
+                              <Calendar className="w-4 h-4" />
+                              <span>
+                                {featuredPosts[currentFeaturedIndex]?.created_at
+                                  ? timeAgo(
+                                      featuredPosts[currentFeaturedIndex]
+                                        .created_at,
+                                    )
+                                  : "Unknown date"}
+                              </span>
+                            </div>
+                          </div>
+
+                          <h3 className="text-2xl md:text-3xl font-bold leading-tight hover:text-primary transition-colors">
+                            {featuredPosts[currentFeaturedIndex]?.title}
+                          </h3>
+
+                          <p className="text-muted-foreground leading-relaxed line-clamp-3">
+                            {featuredPosts[currentFeaturedIndex]?.description}
+                          </p>
+
+                          <div className="flex flex-wrap gap-2 mb-4">
+                            {featuredPosts[currentFeaturedIndex]?.tags
+                              ?.slice(0, 3)
+                              .map((tag) => (
+                                <ClickableTag
+                                  key={tag.id}
+                                  tag={tag}
+                                  variant="secondary"
+                                  size="sm"
+                                  className="hover:bg-primary/10 transition-colors"
+                                />
+                              ))}
+                            {(featuredPosts[currentFeaturedIndex]?.tags
+                              ?.length || 0) > 3 && (
+                              <Badge variant="outline" className="text-xs">
+                                +
+                                {(featuredPosts[currentFeaturedIndex]?.tags
+                                  ?.length || 0) - 3}{" "}
+                                more
+                              </Badge>
+                            )}
+                          </div>
+
+                          <Button
+                            onClick={() =>
+                              router.push(
+                                `/post/${createPostSlug(
+                                  featuredPosts[currentFeaturedIndex]?.title,
+                                  featuredPosts[currentFeaturedIndex]?.id,
+                                )}`,
+                              )
+                            }
+                            className="w-full sm:w-auto"
+                            size="lg"
+                          >
+                            Read Article
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </Card>
+                </div>
+
+                {/* Navigation Controls */}
+                <Show when={featuredPosts.length > 1}>
+                  <div className="flex items-center justify-between">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        setCurrentFeaturedIndex((prev) =>
+                          prev === 0 ? featuredPosts.length - 1 : prev - 1,
+                        )
+                      }
+                      className="flex items-center gap-2"
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                      Previous
+                    </Button>
+
+                    {/* Pagination Dots */}
+                    <div className="flex gap-2">
+                      {featuredPosts.map((_, index) => (
+                        <button
+                          key={index}
+                          onClick={() => setCurrentFeaturedIndex(index)}
+                          className={`w-2 h-2 rounded-full transition-all duration-200 ${
+                            index === currentFeaturedIndex
+                              ? "bg-primary w-6"
+                              : "bg-muted-foreground/30 hover:bg-muted-foreground/50"
+                          }`}
+                        />
+                      ))}
+                    </div>
+
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        setCurrentFeaturedIndex((prev) =>
+                          prev === featuredPosts.length - 1 ? 0 : prev + 1,
+                        )
+                      }
+                      className="flex items-center gap-2"
+                    >
+                      Next
+                      <ChevronRight className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </Show>
+              </div>
+            </div>
+          </Show>
+
+          {/* Loading state for featured posts */}
+          <Show when={featuredQuery.isLoading}>
+            <div className="mb-12">
+              <div className="text-center mb-8">
+                <div className="h-10 bg-muted rounded-lg mb-4 max-w-md mx-auto animate-pulse"></div>
+                <div className="h-6 bg-muted rounded-lg max-w-2xl mx-auto animate-pulse"></div>
+              </div>
+              <Card className="overflow-hidden border-2 border-border/50 min-h-[400px]">
+                <div className="grid grid-cols-1 lg:grid-cols-2 min-h-[400px]">
+                  <div className="bg-muted animate-pulse"></div>
+                  <div className="p-8 space-y-4">
+                    <div className="h-4 bg-muted rounded animate-pulse"></div>
+                    <div className="h-8 bg-muted rounded animate-pulse"></div>
+                    <div className="h-4 bg-muted rounded animate-pulse"></div>
+                    <div className="h-4 bg-muted rounded animate-pulse w-3/4"></div>
+                    <div className="h-10 bg-muted rounded animate-pulse w-1/2"></div>
+                  </div>
+                </div>
+              </Card>
+            </div>
+          </Show>
 
           {/* Main Layout */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -188,19 +451,20 @@ export default function MainPage() {
                                 {post.author.name || post.author.username}
                               </span>
                               <span className="flex-shrink-0">•</span>
-                              <span className="flex-shrink-0">{timeAgo(post.created_at)}</span>
+                              <span className="flex-shrink-0">
+                                {post.created_at ? timeAgo(post.created_at) : "Unknown date"}
+                              </span>
                             </div>
                             <div className="flex items-center gap-1 mt-2 overflow-hidden">
                               <div className="flex gap-1 min-w-0">
                                 {post.tags?.slice(0, 2).map((tag) => (
-                                  <Badge
+                                  <ClickableTag
                                     key={tag.id}
+                                    tag={tag}
                                     variant="secondary"
-                                    className="text-xs px-1.5 py-0.5 truncate max-w-[80px]"
-                                    title={tag.name}
-                                  >
-                                    {tag.name}
-                                  </Badge>
+                                    size="sm"
+                                    className="max-w-[80px] truncate"
+                                  />
                                 ))}
                               </div>
                               {(post.tags?.length || 0) > 2 && (
@@ -234,14 +498,13 @@ export default function MainPage() {
                           .slice(0, 15),
                       ),
                     ).map((tag) => (
-                      <Badge 
-                        key={tag.id} 
-                        variant="outline" 
-                        className="text-xs whitespace-nowrap max-w-[120px] truncate"
-                        title={tag.name}
-                      >
-                        {tag.name}
-                      </Badge>
+                      <ClickableTag
+                        key={tag.id}
+                        tag={tag}
+                        variant="outline"
+                        size="sm"
+                        className="max-w-[120px] truncate"
+                      />
                     ))}
                   </div>
                 </CardContent>
