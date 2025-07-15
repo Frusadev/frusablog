@@ -11,7 +11,7 @@ from app.api.routes.v1.providers.user import get_optional_current_user
 from app.core.db.models import User
 from app.core.db.setup import create_db_session
 
-resource_router = APIRouter(prefix="/v1")
+resource_router = APIRouter(prefix="/v1", tags=["File management"])
 
 
 @resource_router.get(
