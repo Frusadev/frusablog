@@ -1,4 +1,5 @@
 "use client";
+
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,14 +15,13 @@ import { Label } from "@/components/ui/label";
 import { FormEvent, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { register as registerFn } from "@/lib/api/requests/auth";
-import { useRouter } from "next/navigation";
 import { X } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Spinner } from "@/components/ui/Spinner";
 import Logo from "@/components/ui/custom/Logo";
+import { toast } from "sonner";
 
 export default function Register() {
-  const router = useRouter();
   const [username, setUsername] = useState("");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -32,7 +32,9 @@ export default function Register() {
     mutationKey: ["/auth/register"],
     mutationFn: registerFn,
     onSuccess: () => {
-      router.push("/login");
+      toast.success(
+        "Registration successful! A login email was sent to your inbox.",
+      );
     },
     onError: (e) => {
       setError(true);
@@ -65,7 +67,9 @@ export default function Register() {
                 <AlertDescription>{errorMsg}</AlertDescription>
               </Alert>
             ) : null}
-            <CardTitle className="cursor-default">Create your account</CardTitle>
+            <CardTitle className="cursor-default">
+              Create your account
+            </CardTitle>
             <CardDescription>
               Welcome! Please fill in the information to get started.
             </CardDescription>
@@ -129,9 +133,7 @@ export default function Register() {
                 Continue
               </Button>
               <Button variant="link" size="sm" asChild>
-                <Link href="/login">
-                  Already have an account? Sign in
-                </Link>
+                <Link href="/login">Already have an account? Sign in</Link>
               </Button>
             </div>
           </CardFooter>
