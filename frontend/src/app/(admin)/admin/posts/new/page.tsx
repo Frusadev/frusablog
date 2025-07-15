@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -28,6 +28,7 @@ import {
   FileText,
   Sparkles,
   PlusCircle,
+  Upload,
 } from "lucide-react";
 
 export default function NewPostPage() {
@@ -45,12 +46,101 @@ export default function NewPostPage() {
   const [published, setPublished] = useState(false);
   const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
   const [newTagName, setNewTagName] = useState("");
+  const [isDragging, setIsDragging] = useState(false);
+  const [uploadingFiles, setUploadingFiles] = useState<string[]>([]);
 
   // Fetch available tags
   const { data: availableTags = [] } = useQuery({
     queryKey: ["tags"],
     queryFn: () => getTags({ limit: 100 }),
   });
+
+  // File upload mutation for editor files
+  const editorUploadMutation = useMutation({
+    mutationFn: (file: File) => uploadFile(file, false),
+    onSuccess: (fileResource: FileResource, file: File) => {
+      // Remove from uploading list
+      setUploadingFiles(prev => prev.filter(name => name !== file.name));
+      
+      // Insert link into editor at cursor position
+      const fileUrl = `/files/${fileResource.id}`;
+      const fileName = file.name;
+      const isImage = file.type.startsWith('image/');
+      const isVideo = file.type.startsWith('video/');
+      
+      let markdownLink = '';
+      if (isImage) {
+        markdownLink = `![${fileName}](${fileUrl})`;
+      } else if (isVideo) {
+        markdownLink = `<video controls width="100%">\n  <source src="${fileUrl}" type="${file.type}">\n  Your browser does not support the video tag.\n</video>`;
+      } else {
+        markdownLink = `[${fileName}](${fileUrl})`;
+      }
+      
+      // Insert at the end of content for now (can be improved to insert at cursor)
+      setContent(prev => prev + '\n\n' + markdownLink);
+      
+      toast.success(`${fileName} uploaded successfully`);
+    },
+    onError: (error, file: File) => {
+      setUploadingFiles(prev => prev.filter(name => name !== file.name));
+      toast.error(`Failed to upload ${file.name}`);
+    },
+  });
+
+  // Utility function to check if file type is supported
+  const isFileTypeSupported = (file: File): boolean => {
+    const supportedTypes = [
+      'image/png',
+      'image/jpeg', 
+      'image/jpg',
+      'image/gif',
+      'image/webp',
+      'video/mp4',
+      'video/webm',
+      'video/ogg'
+    ];
+    return supportedTypes.includes(file.type);
+  };
+
+  // Handle file drop
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const files = Array.from(e.dataTransfer.files);
+    const supportedFiles = files.filter(isFileTypeSupported);
+    const unsupportedFiles = files.filter(file => !isFileTypeSupported(file));
+
+    if (unsupportedFiles.length > 0) {
+      toast.error(`Unsupported file types: ${unsupportedFiles.map(f => f.name).join(', ')}`);
+    }
+
+    if (supportedFiles.length > 0) {
+      // Add files to uploading list
+      setUploadingFiles(prev => [...prev, ...supportedFiles.map(f => f.name)]);
+      
+      // Upload each file
+      supportedFiles.forEach(file => {
+        editorUploadMutation.mutate(file);
+      });
+    }
+  }, [editorUploadMutation]);
+
+  // Handle drag over
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  }, []);
+
+  // Handle drag leave
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  }, []);
 
   // File upload mutation
   const uploadMutation = useMutation({
@@ -84,9 +174,9 @@ export default function NewPostPage() {
   // Create post mutation
   const createMutation = useMutation({
     mutationFn: (data: PostCreationDTO) => createPost(data),
-    onSuccess: (post) => {
+    onSuccess: (post, data) => {
       toast.success(
-        `Post ${published ? "published" : "saved as draft"} successfully`,
+        `Post ${data.published ? "published" : "saved as draft"} successfully`,
       );
       queryClient.invalidateQueries({ queryKey: ["posts"] });
       router.push(`/admin/posts/${post.id}`);
@@ -173,57 +263,56 @@ export default function NewPostPage() {
   const handlePublish = () => handleSave(true);
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8 max-w-7xl">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
-          <div className="flex items-center gap-4">
-            <Button onClick={() => router.back()} variant="ghost" size="sm">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back
-            </Button>
-            <div>
-              <h1 className="text-xl sm:text-2xl font-bold">Create New Post</h1>
-              <p className="text-muted-foreground text-sm sm:text-base">
-                Write and publish your blog post
-              </p>
-            </div>
-          </div>
-
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-            <Button
-              onClick={handleSaveAsDraft}
-              disabled={createMutation.isPending}
-              variant="outline"
-              size="sm"
-              className="flex items-center justify-center"
-            >
-              <Show when={createMutation.isPending}>
-                <Spinner size="small" className="stroke-foreground mr-2" />
-              </Show>
-              <Show when={!createMutation.isPending}>
-                <FileText className="w-4 h-4 mr-2" />
-              </Show>
-              Save as Draft
-            </Button>
-            <Button
-              onClick={handlePublish}
-              disabled={createMutation.isPending}
-              size="sm"
-              className="flex items-center justify-center"
-            >
-              <Show when={createMutation.isPending}>
-                <Spinner size="small" className="stroke-background mr-2" />
-              </Show>
-              <Show when={!createMutation.isPending}>
-                <Sparkles className="w-4 h-4 mr-2" />
-              </Show>
-              Publish Post
-            </Button>
+    <div className="min-h-full">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+        <div className="flex items-center gap-4">
+          <Button onClick={() => router.back()} variant="ghost" size="sm">
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back
+          </Button>
+          <div>
+            <h1 className="text-xl sm:text-2xl font-bold">Create New Post</h1>
+            <p className="text-muted-foreground text-sm sm:text-base">
+              Write and publish your blog post
+            </p>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 sm:gap-8">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+          <Button
+            onClick={handleSaveAsDraft}
+            disabled={createMutation.isPending}
+            variant="outline"
+            size="sm"
+            className="flex items-center justify-center"
+          >
+            <Show when={createMutation.isPending}>
+              <Spinner size="small" className="stroke-foreground mr-2" />
+            </Show>
+            <Show when={!createMutation.isPending}>
+              <FileText className="w-4 h-4 mr-2" />
+            </Show>
+            Save as Draft
+          </Button>
+          <Button
+            onClick={handlePublish}
+            disabled={createMutation.isPending}
+            size="sm"
+            className="flex items-center justify-center"
+          >
+            <Show when={createMutation.isPending}>
+              <Spinner size="small" className="stroke-background mr-2" />
+            </Show>
+            <Show when={!createMutation.isPending}>
+              <Sparkles className="w-4 h-4 mr-2" />
+            </Show>
+            Publish Post
+          </Button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 sm:gap-8">
           {/* Main Content */}
           <div className="xl:col-span-3 space-y-6">
             {/* Basic Information */}
@@ -263,14 +352,49 @@ export default function NewPostPage() {
                 <CardTitle>Content</CardTitle>
               </CardHeader>
               <CardContent>
-                <div data-color-mode="light" className="w-full">
-                  <MDEditor
-                    value={content}
-                    onChange={(val) => setContent(val || "")}
-                    preview="edit"
-                    height={400}
-                    data-color-mode="light"
-                  />
+                <div 
+                  className={`relative ${isDragging ? 'ring-2 ring-blue-500 ring-offset-2' : ''}`}
+                  onDrop={handleDrop}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                >
+                  {/* Drag overlay */}
+                  {isDragging && (
+                    <div className="absolute inset-0 bg-blue-50 bg-opacity-90 flex items-center justify-center z-10 rounded-lg border-2 border-dashed border-blue-300">
+                      <div className="text-center">
+                        <Upload className="w-8 h-8 mx-auto mb-2 text-blue-500" />
+                        <p className="text-blue-600 font-medium">Drop files here to upload</p>
+                        <p className="text-blue-500 text-sm">Supports: PNG, JPG, GIF, WebP, MP4, WebM, OGG</p>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Upload status */}
+                  {uploadingFiles.length > 0 && (
+                    <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                      <div className="flex items-center gap-2">
+                        <Spinner size="small" className="stroke-blue-600" />
+                        <span className="text-sm text-blue-700">
+                          Uploading {uploadingFiles.length} file(s): {uploadingFiles.join(', ')}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                  
+                  <div data-color-mode="light" className="w-full">
+                    <MDEditor
+                      value={content}
+                      onChange={(val) => setContent(val || "")}
+                      preview="edit"
+                      height={400}
+                      data-color-mode="light"
+                    />
+                  </div>
+                  
+                  {/* Helper text */}
+                  <p className="text-sm text-muted-foreground mt-2">
+                    💡 <strong>Tip:</strong> Drag and drop images or videos directly into the editor to upload them.
+                  </p>
                 </div>
               </CardContent>
             </Card>
@@ -426,7 +550,6 @@ export default function NewPostPage() {
             </Card>
           </div>
         </div>
-      </div>
     </div>
   );
 }
