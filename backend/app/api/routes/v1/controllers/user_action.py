@@ -20,10 +20,10 @@ ViewDependency = Annotated[ViewAction, Depends(get_current_view)]
 VisitDependency = Annotated[VisitAction, Depends(get_current_visit)]
 
 
-user_action_router = APIRouter(prefix="/v1/ua")
+router = APIRouter(prefix="/v1/ua", tags=["User actions"])
 
 
-@user_action_router.websocket("/view")
+@router.websocket("/view")
 async def view(
     ws: WebSocket, db_session: DBSessionDependency, view: ViewDependency
 ):
@@ -32,7 +32,7 @@ async def view(
     )
 
 
-@user_action_router.websocket("/visit")
+@router.websocket("/visit")
 async def visit(
     ws: WebSocket, db_session: DBSessionDependency, visit: VisitDependency
 ):
