@@ -15,7 +15,7 @@ from app.api.routes.v1.providers.auth.email import get_current_user
 from app.core.db.models import User
 from app.core.db.setup import create_db_session
 
-comment_router = APIRouter(prefix="/v1")
+comment_router = APIRouter(prefix="/v1", tags=["Comments"])
 
 
 DBSessionDependency = Annotated[Session, Depends(create_db_session)]
