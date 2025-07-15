@@ -10,7 +10,7 @@ Stay ahead in the ever-evolving world of technology with tutorials, coding tips,
 export const metadata: Metadata = {
   title: "Ametsowou.me",
   description: description,
-  icons: "/logo.png",
+  icons: "/logo.jpg",
 };
 
 export default function RootLayout({
