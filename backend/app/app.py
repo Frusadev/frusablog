@@ -16,7 +16,7 @@ from app.api.routes.v1.controllers.stats import stats_router as v1_stats_router
 from app.api.routes.v1.controllers.tag import tag_router as v1_tag_router
 from app.api.routes.v1.controllers.user import user_router as v1_user_router
 from app.api.routes.v1.controllers.user_action import (
-    user_action_router as v1_user_action_router,
+    router as v1_user_action_router,
 )
 from app.core.config.env import get_env
 from app.core.db.setup import setup_db
