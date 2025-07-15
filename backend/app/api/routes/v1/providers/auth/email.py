@@ -144,7 +144,7 @@ async def authenticate(
 ) -> MessageResponse:
     auth_session = check_existence(
         db_session.get(AuthSession, auth_session_id),
-        detail="Unauthorized.",
+        detail="Wrong or expired link.",
         status_code=HTTP_401_UNAUTHORIZED,
     )
     check_conditions(
@@ -165,6 +165,24 @@ async def authenticate(
         expires=utc(login_session.expires_at),
     )
     return MessageResponse(message="Logged in successfully!")
+
+
+async def logout(
+    db_session: Session,
+    session_id: str | None,
+    response: Response,
+):
+    session = check_existence(
+        db_session.get(
+            LoginSession,
+            check_existence(session_id, detail="Session not found."),
+        ),
+        detail="Session not found.",
+    )
+    db_session.delete(session)
+    db_session.commit()
+    response.delete_cookie(key=LOGIN_SESSION_COOKIE_NAME)
+    return MessageResponse(message="Logged out successfully!")
 
 
 async def unsubscribe(
