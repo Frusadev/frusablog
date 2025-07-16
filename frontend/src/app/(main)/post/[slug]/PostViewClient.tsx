@@ -2,19 +2,54 @@
 
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getPost, likePost, translatePost, getPostViews, checkHasLiked } from "@/lib/api/requests/post";
-import { getPostComments, createComment, likeComment, deleteComment } from "@/lib/api/requests/comment";
+import {
+  getPost,
+  likePost,
+  translatePost,
+  getPostViews,
+  checkHasLiked,
+} from "@/lib/api/requests/post";
+import {
+  getPostComments,
+  createComment,
+  likeComment,
+  deleteComment,
+} from "@/lib/api/requests/comment";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Spinner } from "@/components/ui/Spinner";
 import { ShareButton } from "@/components/ui/share-button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import ThemeSwitch from "@/components/ui/custom/ThemeSwitch";
 import ClickableTag from "@/components/ui/custom/ClickableTag";
 import Show from "@/components/wrappers/Show";
-import { ArrowLeft, Calendar, User, Star, Heart, MessageSquare, Reply, Send, Trash2, Languages, Eye } from "lucide-react";
+import {
+  ArrowLeft,
+  Calendar,
+  User,
+  Star,
+  Heart,
+  MessageSquare,
+  Reply,
+  Send,
+  Trash2,
+  Languages,
+  Eye,
+} from "lucide-react";
 import { timeAgo, formatNumber } from "@/lib/utils";
 import { extractIdFromSlug } from "@/lib/utils/slug";
 import { getResourceUrl } from "@/lib/utils/fileUtils";
@@ -28,7 +63,11 @@ import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
 import rehypeRaw from "rehype-raw";
 import { useViewTracking } from "@/hooks/useUserTracking";
-import type { SupportedLanguages, PostTranslationResult, LanguageOption } from "@/lib/api/dto/post";
+import type {
+  SupportedLanguages,
+  PostTranslationResult,
+  LanguageOption,
+} from "@/lib/api/dto/post";
 
 // Import highlight.js CSS for code syntax highlighting
 import "highlight.js/styles/github-dark.css";
@@ -46,16 +85,20 @@ export default function PostViewClient({ slug }: PostViewClientProps) {
   const [newComment, setNewComment] = useState("");
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [replyContent, setReplyContent] = useState("");
-  
+
   // State for post likes
   const [localLikes, setLocalLikes] = useState(0);
   const [isLiked, setIsLiked] = useState(false);
 
   // State for translation
-  const [translatedContent, setTranslatedContent] = useState<PostTranslationResult | null>(null);
+  const [translatedContent, setTranslatedContent] =
+    useState<PostTranslationResult | null>(null);
   const [showTranslation, setShowTranslation] = useState(false);
-  const [selectedLanguage, setSelectedLanguage] = useState<LanguageOption>("Original");
-  const [translationCache, setTranslationCache] = useState<Record<SupportedLanguages, PostTranslationResult>>({} as Record<SupportedLanguages, PostTranslationResult>);
+  const [selectedLanguage, setSelectedLanguage] =
+    useState<LanguageOption>("Original");
+  const [translationCache, setTranslationCache] = useState<
+    Record<SupportedLanguages, PostTranslationResult>
+  >({} as Record<SupportedLanguages, PostTranslationResult>);
 
   // State for marketing dialog
   const [showMarketingDialog, setShowMarketingDialog] = useState(false);
@@ -67,7 +110,11 @@ export default function PostViewClient({ slug }: PostViewClientProps) {
   // Get current user (optional - doesn't throw if not authenticated)
   const { data: currentUser } = useOptionalCurrentUser();
 
-  const { data: post, isLoading, error } = useQuery({
+  const {
+    data: post,
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ["post", postId],
     queryFn: () => getPost(postId),
     enabled: !!postId,
@@ -114,11 +161,11 @@ export default function PostViewClient({ slug }: PostViewClientProps) {
       const windowHeight = window.innerHeight;
       const documentHeight = document.documentElement.scrollHeight;
       const scrollTop = window.scrollY || document.documentElement.scrollTop;
-      
+
       // Calculate reading progress
       const scrollableHeight = documentHeight - windowHeight;
       const scrollPercentage = (scrollTop / scrollableHeight) * 100;
-      
+
       // Show marketing dialog when user has read 20% of the post
       if (scrollPercentage >= 20 && !hasShownMarketingDialog) {
         setShowMarketingDialog(true);
@@ -126,8 +173,8 @@ export default function PostViewClient({ slug }: PostViewClientProps) {
       }
     };
 
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
   }, [post, currentUser, hasShownMarketingDialog]);
 
   // Like post mutation
@@ -137,17 +184,19 @@ export default function PostViewClient({ slug }: PostViewClientProps) {
       // Optimistic update
       const previousIsLiked = isLiked;
       const previousLikes = localLikes;
-      
+
       setIsLiked(!previousIsLiked);
-      setLocalLikes(prev => previousIsLiked ? prev - 1 : prev + 1);
-      
+      setLocalLikes((prev) => (previousIsLiked ? prev - 1 : prev + 1));
+
       return { previousIsLiked, previousLikes };
     },
     onSuccess: (data) => {
       setLocalLikes(data.likes);
       // Invalidate and refetch queries
       queryClient.invalidateQueries({ queryKey: ["post", postId] });
-      queryClient.invalidateQueries({ queryKey: ["post-liked", postId, currentUser?.id] });
+      queryClient.invalidateQueries({
+        queryKey: ["post-liked", postId, currentUser?.id],
+      });
       queryClient.invalidateQueries({ queryKey: ["posts"] });
       queryClient.invalidateQueries({ queryKey: ["featured-posts"] });
     },
@@ -178,13 +227,13 @@ export default function PostViewClient({ slug }: PostViewClientProps) {
 
   // Translation mutation
   const translatePostMutation = useMutation({
-    mutationFn: ({ language }: { language: SupportedLanguages }) => 
+    mutationFn: ({ language }: { language: SupportedLanguages }) =>
       translatePost(postId, language),
     onSuccess: (data, variables) => {
       // Cache the translation
-      setTranslationCache(prev => ({
+      setTranslationCache((prev) => ({
         ...prev,
-        [variables.language]: data
+        [variables.language]: data,
       }));
       setTranslatedContent(data);
       setShowTranslation(true);
@@ -192,12 +241,17 @@ export default function PostViewClient({ slug }: PostViewClientProps) {
     },
     onError: (error) => {
       console.error("Translation error:", error);
-      
+
       // Handle specific error cases
-      if (error?.name === 'AbortError' || error?.message?.includes('aborted')) {
+      if (error?.name === "AbortError" || error?.message?.includes("aborted")) {
         toast.error("Translation request was cancelled. Please try again.");
-      } else if (error?.message?.includes('network') || error?.message?.includes('fetch')) {
-        toast.error("Network error. Please check your connection and try again.");
+      } else if (
+        error?.message?.includes("network") ||
+        error?.message?.includes("fetch")
+      ) {
+        toast.error(
+          "Network error. Please check your connection and try again.",
+        );
       } else {
         toast.error("Failed to translate post. Please try again.");
       }
@@ -215,7 +269,7 @@ export default function PostViewClient({ slug }: PostViewClientProps) {
     },
   });
 
-  // Delete comment mutation  
+  // Delete comment mutation
   const deleteCommentMutation = useMutation({
     mutationFn: deleteComment,
     onSuccess: () => {
@@ -233,7 +287,7 @@ export default function PostViewClient({ slug }: PostViewClientProps) {
       router.push("/login");
       return;
     }
-    
+
     if (newComment.trim()) {
       createCommentMutation.mutate({
         postId,
@@ -249,7 +303,7 @@ export default function PostViewClient({ slug }: PostViewClientProps) {
       router.push("/login");
       return;
     }
-    
+
     if (replyContent.trim()) {
       createCommentMutation.mutate({
         postId,
@@ -265,15 +319,15 @@ export default function PostViewClient({ slug }: PostViewClientProps) {
       setSelectedLanguage(language);
       return;
     }
-    
+
     // Prevent multiple simultaneous translation requests
     if (translatePostMutation.isPending) {
       toast.warning("Translation in progress. Please wait...");
       return;
     }
-    
+
     setSelectedLanguage(language);
-    
+
     // Check if we already have this translation cached
     if (translationCache[language]) {
       setTranslatedContent(translationCache[language]);
@@ -281,13 +335,13 @@ export default function PostViewClient({ slug }: PostViewClientProps) {
       toast.success("Translation loaded from cache!");
       return;
     }
-    
+
     // Reset previous translation when selecting a new language
     if (selectedLanguage !== language) {
       setTranslatedContent(null);
       setShowTranslation(false);
     }
-    
+
     translatePostMutation.mutate({ language });
   };
 
@@ -339,7 +393,8 @@ export default function PostViewClient({ slug }: PostViewClientProps) {
           <div className="text-center py-12">
             <h1 className="text-2xl font-bold mb-2">Post Not Found</h1>
             <p className="text-muted-foreground mb-4">
-              The post you&apos;re looking for doesn&apos;t exist or has been removed.
+              The post you&apos;re looking for doesn&apos;t exist or has been
+              removed.
             </p>
             <Button onClick={() => router.back()} variant="outline">
               <ArrowLeft className="w-4 h-4 mr-2" />
@@ -388,7 +443,10 @@ export default function PostViewClient({ slug }: PostViewClientProps) {
         <div className="mb-8">
           <div className="flex items-center flex-wrap gap-2 mb-4">
             <Show when={!!post.featured}>
-              <Badge variant="secondary" className="flex items-center gap-1 shrink-0">
+              <Badge
+                variant="secondary"
+                className="flex items-center gap-1 shrink-0"
+              >
                 <Star className="w-3 h-3 fill-current" />
                 Featured
               </Badge>
@@ -405,12 +463,28 @@ export default function PostViewClient({ slug }: PostViewClientProps) {
           </div>
 
           <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 leading-tight">
-            {showTranslation && translatedContent && selectedLanguage !== "Original" ? translatedContent.title : post.title}
+            {showTranslation &&
+            translatedContent &&
+            selectedLanguage !== "Original"
+              ? translatedContent.title
+              : post.title}
           </h1>
 
-          <Show when={!!(showTranslation && translatedContent && selectedLanguage !== "Original" ? translatedContent.description : post.description)}>
+          <Show
+            when={
+              !!(showTranslation &&
+              translatedContent &&
+              selectedLanguage !== "Original"
+                ? translatedContent.description
+                : post.description)
+            }
+          >
             <p className="text-lg text-muted-foreground mb-6 leading-relaxed">
-              {showTranslation && translatedContent && selectedLanguage !== "Original" ? translatedContent.description : post.description}
+              {showTranslation &&
+              translatedContent &&
+              selectedLanguage !== "Original"
+                ? translatedContent.description
+                : post.description}
             </p>
           </Show>
 
@@ -440,37 +514,46 @@ export default function PostViewClient({ slug }: PostViewClientProps) {
                 onClick={handleLikePost}
                 disabled={likePostMutation.isPending}
                 className={`flex items-center gap-2 transition-colors ${
-                  isLiked 
-                    ? 'text-red-500 hover:text-red-600' 
-                    : 'text-muted-foreground hover:text-red-500'
+                  isLiked
+                    ? "text-red-500 hover:text-red-600"
+                    : "text-muted-foreground hover:text-red-500"
                 }`}
               >
                 <Show when={likePostMutation.isPending}>
                   <Spinner size="small" className="w-4 h-4 stroke-current" />
                 </Show>
                 <Show when={!likePostMutation.isPending}>
-                  <Heart className={`w-4 h-4 ${isLiked ? 'fill-red-500 text-red-500' : ''}`} />
+                  <Heart
+                    className={`w-4 h-4 ${isLiked ? "fill-red-500 text-red-500" : ""}`}
+                  />
                 </Show>
                 <span>{localLikes} likes</span>
               </Button>
-              
+
               {/* Translation Button with Language Selector */}
               <div className="flex items-center gap-2">
                 <Select
                   value={selectedLanguage}
-                  onValueChange={(value) => handleTranslatePost(value as LanguageOption)}
+                  onValueChange={(value) =>
+                    handleTranslatePost(value as LanguageOption)
+                  }
                   disabled={translatePostMutation.isPending}
                 >
                   <SelectTrigger className="w-auto min-w-[140px]" size="sm">
                     <div className="flex items-center gap-2">
                       <Show when={translatePostMutation.isPending}>
-                        <Spinner size="small" className="w-4 h-4 stroke-current" />
+                        <Spinner
+                          size="small"
+                          className="w-4 h-4 stroke-current"
+                        />
                       </Show>
                       <Show when={!translatePostMutation.isPending}>
                         <Languages className="w-4 h-4" />
                       </Show>
                       <SelectValue placeholder="Language">
-                        {translatePostMutation.isPending ? "Translating..." : selectedLanguage}
+                        {translatePostMutation.isPending
+                          ? "Translating..."
+                          : selectedLanguage}
                       </SelectValue>
                     </div>
                   </SelectTrigger>
@@ -478,22 +561,40 @@ export default function PostViewClient({ slug }: PostViewClientProps) {
                     <SelectItem value="Original">
                       <span className="font-medium">Original</span>
                     </SelectItem>
-                    <SelectItem value="English" disabled={translatePostMutation.isPending}>
+                    <SelectItem
+                      value="English"
+                      disabled={translatePostMutation.isPending}
+                    >
                       English
                     </SelectItem>
-                    <SelectItem value="French" disabled={translatePostMutation.isPending}>
+                    <SelectItem
+                      value="French"
+                      disabled={translatePostMutation.isPending}
+                    >
                       Français (French)
                     </SelectItem>
-                    <SelectItem value="Spanish" disabled={translatePostMutation.isPending}>
+                    <SelectItem
+                      value="Spanish"
+                      disabled={translatePostMutation.isPending}
+                    >
                       Español (Spanish)
                     </SelectItem>
-                    <SelectItem value="German" disabled={translatePostMutation.isPending}>
+                    <SelectItem
+                      value="German"
+                      disabled={translatePostMutation.isPending}
+                    >
                       Deutsch (German)
                     </SelectItem>
-                    <SelectItem value="Chinese" disabled={translatePostMutation.isPending}>
+                    <SelectItem
+                      value="Chinese"
+                      disabled={translatePostMutation.isPending}
+                    >
                       中文 (Chinese)
                     </SelectItem>
-                    <SelectItem value="Japanese" disabled={translatePostMutation.isPending}>
+                    <SelectItem
+                      value="Japanese"
+                      disabled={translatePostMutation.isPending}
+                    >
                       日本語 (Japanese)
                     </SelectItem>
                   </SelectContent>
@@ -503,7 +604,7 @@ export default function PostViewClient({ slug }: PostViewClientProps) {
               <ShareButton
                 title={post.title}
                 description={post.description}
-                url={typeof window !== 'undefined' ? window.location.href : ''}
+                url={typeof window !== "undefined" ? window.location.href : ""}
               />
             </div>
           </div>
@@ -542,121 +643,188 @@ export default function PostViewClient({ slug }: PostViewClientProps) {
               remarkPlugins={[remarkGfm]}
               rehypePlugins={[rehypeHighlight, rehypeRaw]}
               components={{
-                  // Custom styling for markdown elements
-                  h1: ({ children, ...props }: React.HTMLAttributes<HTMLHeadingElement>) => (
-                    <h1 className="text-3xl font-bold mt-8 mb-4 first:mt-0" {...props}>
-                      {children}
-                    </h1>
-                  ),
-                  h2: ({ children, ...props }: React.HTMLAttributes<HTMLHeadingElement>) => (
-                    <h2 className="text-2xl font-semibold mt-8 mb-4 first:mt-0" {...props}>
-                      {children}
-                    </h2>
-                  ),
-                  h3: ({ children, ...props }: React.HTMLAttributes<HTMLHeadingElement>) => (
-                    <h3 className="text-xl font-semibold mt-6 mb-3 first:mt-0" {...props}>
-                      {children}
-                    </h3>
-                  ),
-                  p: ({ children, ...props }: React.HTMLAttributes<HTMLParagraphElement>) => (
-                    <p className="mb-4 leading-7 text-foreground" {...props}>
-                      {children}
-                    </p>
-                  ),
-                  blockquote: ({ children, ...props }: React.HTMLAttributes<HTMLQuoteElement>) => (
-                    <blockquote
-                      className="border-l-4 border-primary pl-4 my-6 italic text-muted-foreground"
+                // Custom styling for markdown elements
+                h1: ({
+                  children,
+                  ...props
+                }: React.HTMLAttributes<HTMLHeadingElement>) => (
+                  <h1
+                    className="text-3xl font-bold mt-8 mb-4 first:mt-0"
+                    {...props}
+                  >
+                    {children}
+                  </h1>
+                ),
+                h2: ({
+                  children,
+                  ...props
+                }: React.HTMLAttributes<HTMLHeadingElement>) => (
+                  <h2
+                    className="text-2xl font-semibold mt-8 mb-4 first:mt-0"
+                    {...props}
+                  >
+                    {children}
+                  </h2>
+                ),
+                h3: ({
+                  children,
+                  ...props
+                }: React.HTMLAttributes<HTMLHeadingElement>) => (
+                  <h3
+                    className="text-xl font-semibold mt-6 mb-3 first:mt-0"
+                    {...props}
+                  >
+                    {children}
+                  </h3>
+                ),
+                p: ({
+                  children,
+                  ...props
+                }: React.HTMLAttributes<HTMLParagraphElement>) => (
+                  <p className="mb-4 leading-7 text-foreground" {...props}>
+                    {children}
+                  </p>
+                ),
+                blockquote: ({
+                  children,
+                  ...props
+                }: React.HTMLAttributes<HTMLQuoteElement>) => (
+                  <blockquote
+                    className="border-l-4 border-primary pl-4 my-6 italic text-muted-foreground"
+                    {...props}
+                  >
+                    {children}
+                  </blockquote>
+                ),
+                code: ({
+                  children,
+                  className,
+                  ...props
+                }: React.HTMLAttributes<HTMLElement> & {
+                  className?: string;
+                }) => {
+                  const isInline = !className?.includes("language-");
+                  return isInline ? (
+                    <code
+                      className="bg-muted px-2 py-1 rounded text-sm font-mono"
                       {...props}
                     >
                       {children}
-                    </blockquote>
-                  ),
-                  code: ({ children, className, ...props }: React.HTMLAttributes<HTMLElement> & { className?: string }) => {
-                    const isInline = !className?.includes('language-');
-                    return isInline ? (
-                      <code
-                        className="bg-muted px-2 py-1 rounded text-sm font-mono"
-                        {...props}
-                      >
-                        {children}
-                      </code>
-                    ) : (
-                      <code {...props}>{children}</code>
-                    );
-                  },
-                  pre: ({ children, ...props }: React.HTMLAttributes<HTMLPreElement>) => (
-                    <pre
-                      className="bg-muted rounded-lg p-4 overflow-x-auto my-6"
+                    </code>
+                  ) : (
+                    <code {...props}>{children}</code>
+                  );
+                },
+                pre: ({
+                  children,
+                  ...props
+                }: React.HTMLAttributes<HTMLPreElement>) => (
+                  <pre
+                    className="bg-muted rounded-lg p-4 overflow-x-auto my-6"
+                    {...props}
+                  >
+                    {children}
+                  </pre>
+                ),
+                ul: ({
+                  children,
+                  ...props
+                }: React.HTMLAttributes<HTMLUListElement>) => (
+                  <ul
+                    className="list-disc list-inside mb-4 space-y-2"
+                    {...props}
+                  >
+                    {children}
+                  </ul>
+                ),
+                ol: ({
+                  children,
+                  ...props
+                }: React.HTMLAttributes<HTMLOListElement>) => (
+                  <ol
+                    className="list-decimal list-inside mb-4 space-y-2"
+                    {...props}
+                  >
+                    {children}
+                  </ol>
+                ),
+                li: ({
+                  children,
+                  ...props
+                }: React.HTMLAttributes<HTMLLIElement>) => (
+                  <li className="text-foreground" {...props}>
+                    {children}
+                  </li>
+                ),
+                a: ({
+                  children,
+                  ...props
+                }: React.AnchorHTMLAttributes<HTMLAnchorElement>) => (
+                  <a
+                    className="text-primary hover:underline font-medium"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    {...props}
+                  >
+                    {children}
+                  </a>
+                ),
+                img: ({
+                  alt,
+                  src,
+                }: React.ImgHTMLAttributes<HTMLImageElement>) => (
+                  <Image
+                    className="rounded-lg my-6 max-w-full h-auto"
+                    alt={alt || ""}
+                    src={typeof src === "string" ? src : ""}
+                    width={800}
+                    height={600}
+                  />
+                ),
+                hr: ({ ...props }: React.HTMLAttributes<HTMLHRElement>) => (
+                  <hr className="my-8 border-border" {...props} />
+                ),
+                table: ({
+                  children,
+                  ...props
+                }: React.TableHTMLAttributes<HTMLTableElement>) => (
+                  <div className="overflow-x-auto my-6">
+                    <table
+                      className="min-w-full border-collapse border border-border"
                       {...props}
                     >
                       {children}
-                    </pre>
-                  ),
-                  ul: ({ children, ...props }: React.HTMLAttributes<HTMLUListElement>) => (
-                    <ul className="list-disc list-inside mb-4 space-y-2" {...props}>
-                      {children}
-                    </ul>
-                  ),
-                  ol: ({ children, ...props }: React.HTMLAttributes<HTMLOListElement>) => (
-                    <ol className="list-decimal list-inside mb-4 space-y-2" {...props}>
-                      {children}
-                    </ol>
-                  ),
-                  li: ({ children, ...props }: React.HTMLAttributes<HTMLLIElement>) => (
-                    <li className="text-foreground" {...props}>
-                      {children}
-                    </li>
-                  ),
-                  a: ({ children, ...props }: React.AnchorHTMLAttributes<HTMLAnchorElement>) => (
-                    <a
-                      className="text-primary hover:underline font-medium"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      {...props}
-                    >
-                      {children}
-                    </a>
-                  ),
-                  img: ({ alt, src }: React.ImgHTMLAttributes<HTMLImageElement>) => (
-                    <Image
-                      className="rounded-lg my-6 max-w-full h-auto"
-                      alt={alt || ""}
-                      src={typeof src === 'string' ? src : ""}
-                      width={800}
-                      height={600}
-                    />
-                  ),
-                  hr: ({ ...props }: React.HTMLAttributes<HTMLHRElement>) => (
-                    <hr className="my-8 border-border" {...props} />
-                  ),
-                  table: ({ children, ...props }: React.TableHTMLAttributes<HTMLTableElement>) => (
-                    <div className="overflow-x-auto my-6">
-                      <table
-                        className="min-w-full border-collapse border border-border"
-                        {...props}
-                      >
-                        {children}
-                      </table>
-                    </div>
-                  ),
-                  th: ({ children, ...props }: React.ThHTMLAttributes<HTMLTableCellElement>) => (
-                    <th
-                      className="border border-border bg-muted px-4 py-2 text-left font-semibold"
-                      {...props}
-                    >
-                      {children}
-                    </th>
-                  ),
-                  td: ({ children, ...props }: React.TdHTMLAttributes<HTMLTableCellElement>) => (
-                    <td className="border border-border px-4 py-2" {...props}>
-                      {children}
-                    </td>
-                  ),
-                }}
-              >
-                {showTranslation && translatedContent && selectedLanguage !== "Original" ? translatedContent.content : post.content}
-              </ReactMarkdown>
-            </div>
+                    </table>
+                  </div>
+                ),
+                th: ({
+                  children,
+                  ...props
+                }: React.ThHTMLAttributes<HTMLTableCellElement>) => (
+                  <th
+                    className="border border-border bg-muted px-4 py-2 text-left font-semibold"
+                    {...props}
+                  >
+                    {children}
+                  </th>
+                ),
+                td: ({
+                  children,
+                  ...props
+                }: React.TdHTMLAttributes<HTMLTableCellElement>) => (
+                  <td className="border border-border px-4 py-2" {...props}>
+                    {children}
+                  </td>
+                ),
+              }}
+            >
+              {showTranslation &&
+              translatedContent &&
+              selectedLanguage !== "Original"
+                ? translatedContent.content
+                : post.content}
+            </ReactMarkdown>
+          </div>
         </div>
 
         {/* Comments Section */}
@@ -688,11 +856,17 @@ export default function PostViewClient({ slug }: PostViewClientProps) {
                       <div className="flex justify-end">
                         <Button
                           onClick={handleCreateComment}
-                          disabled={!newComment.trim() || createCommentMutation.isPending}
+                          disabled={
+                            !newComment.trim() ||
+                            createCommentMutation.isPending
+                          }
                           size="sm"
                         >
                           <Show when={createCommentMutation.isPending}>
-                            <Spinner size="small" className="stroke-background mr-2" />
+                            <Spinner
+                              size="small"
+                              className="stroke-background mr-2"
+                            />
                           </Show>
                           <Show when={!createCommentMutation.isPending}>
                             <Send className="w-4 h-4 mr-2" />
@@ -710,7 +884,9 @@ export default function PostViewClient({ slug }: PostViewClientProps) {
             <Show when={!currentUser}>
               <div className="mb-8 bg-muted/50 rounded-lg p-6 text-center">
                 <MessageSquare className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
-                <h3 className="text-lg font-semibold mb-2">Join the conversation</h3>
+                <h3 className="text-lg font-semibold mb-2">
+                  Join the conversation
+                </h3>
                 <p className="text-muted-foreground mb-4">
                   Log in to share your thoughts and engage with other readers.
                 </p>
@@ -751,7 +927,10 @@ export default function PostViewClient({ slug }: PostViewClientProps) {
                 {comments
                   .filter((comment) => !comment.parent_id) // Top-level comments only
                   .map((comment) => (
-                    <div key={comment.id} className="border border-border rounded-lg p-4">
+                    <div
+                      key={comment.id}
+                      className="border border-border rounded-lg p-4"
+                    >
                       {/* Comment Header */}
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex items-center gap-3">
@@ -761,11 +940,12 @@ export default function PostViewClient({ slug }: PostViewClientProps) {
                           <div>
                             <p className="font-medium">{comment.author.name}</p>
                             <p className="text-xs text-muted-foreground">
-                              @{comment.author.username} • {timeAgo(comment.created_at)}
+                              @{comment.author.username} •{" "}
+                              {timeAgo(comment.created_at)}
                             </p>
                           </div>
                         </div>
-                        
+
                         <Show when={currentUser?.id === comment.author.id}>
                           <Button
                             variant="ghost"
@@ -780,7 +960,9 @@ export default function PostViewClient({ slug }: PostViewClientProps) {
 
                       {/* Comment Content */}
                       <div className="mb-4">
-                        <p className="text-sm leading-relaxed">{comment.content}</p>
+                        <p className="text-sm leading-relaxed">
+                          {comment.content}
+                        </p>
                       </div>
 
                       {/* Comment Actions */}
@@ -792,15 +974,21 @@ export default function PostViewClient({ slug }: PostViewClientProps) {
                           className="flex items-center gap-1 text-muted-foreground hover:text-red-500 transition-colors"
                           disabled={!currentUser}
                         >
-                          <Heart className={`w-4 h-4 ${comment.likes > 0 ? 'fill-current text-red-500' : ''}`} />
+                          <Heart
+                            className={`w-4 h-4 ${comment.likes > 0 ? "fill-current text-red-500" : ""}`}
+                          />
                           <span className="text-xs">{comment.likes}</span>
                         </Button>
-                        
+
                         <Show when={!!currentUser}>
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => setReplyingTo(replyingTo === comment.id ? null : comment.id)}
+                            onClick={() =>
+                              setReplyingTo(
+                                replyingTo === comment.id ? null : comment.id,
+                              )
+                            }
                             className="flex items-center gap-1 text-muted-foreground hover:text-primary transition-colors"
                           >
                             <Reply className="w-4 h-4" />
@@ -832,11 +1020,17 @@ export default function PostViewClient({ slug }: PostViewClientProps) {
                               </Button>
                               <Button
                                 onClick={() => handleReply(comment.id)}
-                                disabled={!replyContent.trim() || createCommentMutation.isPending}
+                                disabled={
+                                  !replyContent.trim() ||
+                                  createCommentMutation.isPending
+                                }
                                 size="sm"
                               >
                                 <Show when={createCommentMutation.isPending}>
-                                  <Spinner size="small" className="stroke-background mr-2" />
+                                  <Spinner
+                                    size="small"
+                                    className="stroke-background mr-2"
+                                  />
                                 </Show>
                                 Reply
                               </Button>
@@ -846,37 +1040,51 @@ export default function PostViewClient({ slug }: PostViewClientProps) {
                       </Show>
 
                       {/* Replies */}
-                      <Show when={comment.children && comment.children.length > 0}>
+                      <Show
+                        when={comment.children && comment.children.length > 0}
+                      >
                         <div className="mt-4 pl-6 border-l-2 border-border space-y-4">
                           {comment.children.map((reply) => (
-                            <div key={reply.id} className="bg-muted/30 rounded-lg p-3">
+                            <div
+                              key={reply.id}
+                              className="bg-muted/30 rounded-lg p-3"
+                            >
                               <div className="flex items-start justify-between mb-2">
                                 <div className="flex items-center gap-2">
                                   <div className="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center">
                                     <User className="w-3 h-3 text-primary" />
                                   </div>
                                   <div>
-                                    <p className="text-sm font-medium">{reply.author.name}</p>
+                                    <p className="text-sm font-medium">
+                                      {reply.author.name}
+                                    </p>
                                     <p className="text-xs text-muted-foreground">
-                                      @{reply.author.username} • {timeAgo(reply.created_at)}
+                                      @{reply.author.username} •{" "}
+                                      {timeAgo(reply.created_at)}
                                     </p>
                                   </div>
                                 </div>
-                                
-                                <Show when={currentUser?.id === reply.author.id}>
+
+                                <Show
+                                  when={currentUser?.id === reply.author.id}
+                                >
                                   <Button
                                     variant="ghost"
                                     size="sm"
-                                    onClick={() => handleDeleteComment(reply.id)}
+                                    onClick={() =>
+                                      handleDeleteComment(reply.id)
+                                    }
                                     className="text-muted-foreground hover:text-destructive"
                                   >
                                     <Trash2 className="w-3 h-3" />
                                   </Button>
                                 </Show>
                               </div>
-                              
-                              <p className="text-sm leading-relaxed mb-2">{reply.content}</p>
-                              
+
+                              <p className="text-sm leading-relaxed mb-2">
+                                {reply.content}
+                              </p>
+
                               <Button
                                 variant="ghost"
                                 size="sm"
@@ -884,7 +1092,9 @@ export default function PostViewClient({ slug }: PostViewClientProps) {
                                 className="flex items-center gap-1 text-muted-foreground hover:text-red-500 transition-colors"
                                 disabled={!currentUser}
                               >
-                                <Heart className={`w-3 h-3 ${reply.likes > 0 ? 'fill-current text-red-500' : ''}`} />
+                                <Heart
+                                  className={`w-3 h-3 ${reply.likes > 0 ? "fill-current text-red-500" : ""}`}
+                                />
                                 <span className="text-xs">{reply.likes}</span>
                               </Button>
                             </div>
@@ -908,23 +1118,25 @@ export default function PostViewClient({ slug }: PostViewClientProps) {
                 onClick={handleLikePost}
                 disabled={likePostMutation.isPending}
                 className={`flex items-center gap-2 transition-colors ${
-                  isLiked 
-                    ? 'text-red-500 hover:text-red-600' 
-                    : 'text-muted-foreground hover:text-red-500'
+                  isLiked
+                    ? "text-red-500 hover:text-red-600"
+                    : "text-muted-foreground hover:text-red-500"
                 }`}
               >
                 <Show when={likePostMutation.isPending}>
                   <Spinner size="small" className="w-4 h-4 stroke-current" />
                 </Show>
                 <Show when={!likePostMutation.isPending}>
-                  <Heart className={`w-4 h-4 ${isLiked ? 'fill-red-500 text-red-500' : ''}`} />
+                  <Heart
+                    className={`w-4 h-4 ${isLiked ? "fill-red-500 text-red-500" : ""}`}
+                  />
                 </Show>
                 <span>{localLikes} likes</span>
               </Button>
               <ShareButton
                 title={post.title}
                 description={post.description}
-                url={typeof window !== 'undefined' ? window.location.href : ''}
+                url={typeof window !== "undefined" ? window.location.href : ""}
                 variant="outline"
               />
             </div>
@@ -947,56 +1159,93 @@ export default function PostViewClient({ slug }: PostViewClientProps) {
               Enjoying this article?
             </DialogTitle>
             <DialogDescription className="text-base text-muted-foreground">
-              Join the community to get notified about new posts, connect with other readers, and unlock exclusive content.
+              Join the community to get notified about new posts, connect with
+              other readers, and unlock exclusive content.
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="space-y-4 py-4">
             <div className="space-y-3">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center">
-                  <svg className="w-4 h-4 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  <svg
+                    className="w-4 h-4 text-green-600 dark:text-green-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M5 13l4 4L19 7"
+                    />
                   </svg>
                 </div>
-                <span className="text-sm text-muted-foreground">Get notified about new articles</span>
+                <span className="text-sm text-muted-foreground">
+                  Get notified about new articles
+                </span>
               </div>
-              
+
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center">
-                  <svg className="w-4 h-4 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                  <svg
+                    className="w-4 h-4 text-blue-600 dark:text-blue-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                    />
                   </svg>
                 </div>
-                <span className="text-sm text-muted-foreground">Join the discussion in comments</span>
+                <span className="text-sm text-muted-foreground">
+                  Join the discussion in comments
+                </span>
               </div>
-              
+
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 bg-purple-100 dark:bg-purple-900/20 rounded-full flex items-center justify-center">
-                  <svg className="w-4 h-4 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                  <svg
+                    className="w-4 h-4 text-purple-600 dark:text-purple-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                    />
                   </svg>
                 </div>
-                <span className="text-sm text-muted-foreground">Like and save your favorite posts</span>
+                <span className="text-sm text-muted-foreground">
+                  Like and save your favorite posts
+                </span>
               </div>
             </div>
           </div>
-          
+
           <div className="flex flex-col gap-2 pt-4">
-            <Button 
-              onClick={() => router.push('/auth/register')}
+            <Button
+              onClick={() => router.push("/register")}
               className="w-full bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 text-white font-medium"
             >
               Create Free Account
             </Button>
-            <Button 
-              onClick={() => router.push('/auth/login')}
+            <Button
+              onClick={() => router.push("/login")}
               variant="outline"
               className="w-full"
             >
               Sign In
             </Button>
-            <Button 
+            <Button
               onClick={() => setShowMarketingDialog(false)}
               variant="ghost"
               className="w-full text-sm text-muted-foreground"
