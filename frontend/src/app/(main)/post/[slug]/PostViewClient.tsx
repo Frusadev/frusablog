@@ -10,7 +10,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Spinner } from "@/components/ui/Spinner";
 import { ShareButton } from "@/components/ui/share-button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import ThemeSwitch from "@/components/ui/custom/ThemeSwitch";
+import ClickableTag from "@/components/ui/custom/ClickableTag";
 import Show from "@/components/wrappers/Show";
 import { ArrowLeft, Calendar, User, Star, Heart, MessageSquare, Reply, Send, Trash2, Languages, Eye } from "lucide-react";
 import { timeAgo, formatNumber } from "@/lib/utils";
@@ -54,6 +56,10 @@ export default function PostViewClient({ slug }: PostViewClientProps) {
   const [showTranslation, setShowTranslation] = useState(false);
   const [selectedLanguage, setSelectedLanguage] = useState<LanguageOption>("Original");
   const [translationCache, setTranslationCache] = useState<Record<SupportedLanguages, PostTranslationResult>>({} as Record<SupportedLanguages, PostTranslationResult>);
+
+  // State for marketing dialog
+  const [showMarketingDialog, setShowMarketingDialog] = useState(false);
+  const [hasShownMarketingDialog, setHasShownMarketingDialog] = useState(false);
 
   // Initialize view tracking for this post
   useViewTracking();
@@ -99,6 +105,30 @@ export default function PostViewClient({ slug }: PostViewClientProps) {
   useEffect(() => {
     setIsLiked(hasLiked);
   }, [hasLiked]);
+
+  // Track reading progress and show marketing dialog at 20%
+  useEffect(() => {
+    if (!post || currentUser || hasShownMarketingDialog) return;
+
+    const handleScroll = () => {
+      const windowHeight = window.innerHeight;
+      const documentHeight = document.documentElement.scrollHeight;
+      const scrollTop = window.scrollY || document.documentElement.scrollTop;
+      
+      // Calculate reading progress
+      const scrollableHeight = documentHeight - windowHeight;
+      const scrollPercentage = (scrollTop / scrollableHeight) * 100;
+      
+      // Show marketing dialog when user has read 20% of the post
+      if (scrollPercentage >= 20 && !hasShownMarketingDialog) {
+        setShowMarketingDialog(true);
+        setHasShownMarketingDialog(true);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [post, currentUser, hasShownMarketingDialog]);
 
   // Like post mutation
   const likePostMutation = useMutation({
@@ -364,9 +394,13 @@ export default function PostViewClient({ slug }: PostViewClientProps) {
               </Badge>
             </Show>
             {post.tags?.map((tag) => (
-              <Badge key={tag.id} variant="outline" className="text-xs shrink-0">
-                {tag.name}
-              </Badge>
+              <ClickableTag
+                key={tag.id}
+                tag={tag}
+                variant="outline"
+                size="sm"
+                className="shrink-0"
+              />
             ))}
           </div>
 
@@ -904,6 +938,74 @@ export default function PostViewClient({ slug }: PostViewClientProps) {
           </div>
         </div>
       </div>
+
+      {/* Marketing Dialog */}
+      <Dialog open={showMarketingDialog} onOpenChange={setShowMarketingDialog}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
+              Enjoying this article?
+            </DialogTitle>
+            <DialogDescription className="text-base text-muted-foreground">
+              Join the community to get notified about new posts, connect with other readers, and unlock exclusive content.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center">
+                  <svg className="w-4 h-4 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <span className="text-sm text-muted-foreground">Get notified about new articles</span>
+              </div>
+              
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center">
+                  <svg className="w-4 h-4 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                  </svg>
+                </div>
+                <span className="text-sm text-muted-foreground">Join the discussion in comments</span>
+              </div>
+              
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-purple-100 dark:bg-purple-900/20 rounded-full flex items-center justify-center">
+                  <svg className="w-4 h-4 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                  </svg>
+                </div>
+                <span className="text-sm text-muted-foreground">Like and save your favorite posts</span>
+              </div>
+            </div>
+          </div>
+          
+          <div className="flex flex-col gap-2 pt-4">
+            <Button 
+              onClick={() => router.push('/auth/register')}
+              className="w-full bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 text-white font-medium"
+            >
+              Create Free Account
+            </Button>
+            <Button 
+              onClick={() => router.push('/auth/login')}
+              variant="outline"
+              className="w-full"
+            >
+              Sign In
+            </Button>
+            <Button 
+              onClick={() => setShowMarketingDialog(false)}
+              variant="ghost"
+              className="w-full text-sm text-muted-foreground"
+            >
+              Maybe later
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

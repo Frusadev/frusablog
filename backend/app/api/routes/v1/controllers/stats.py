@@ -10,7 +10,7 @@ from app.api.routes.v1.providers.auth.email import get_current_user
 from app.core.db.models import User
 from app.core.db.setup import create_db_session
 
-stats_router = APIRouter(prefix="/v1")
+stats_router = APIRouter(prefix="/v1", tags=["Stats"])
 
 DBSessionDependency = Annotated[Session, Depends(create_db_session)]
 CurrentUserDependency = Annotated[User, Depends(get_current_user)]
@@ -108,4 +108,3 @@ async def get_average_view_time(
     return await stats_provider.get_average_view_time(
         db_session=db_session, current_user=current_user, start=start, end=end
     )
-

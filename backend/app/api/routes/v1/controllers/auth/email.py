@@ -1,11 +1,12 @@
 from typing import Annotated
 
-from fastapi import APIRouter, BackgroundTasks, Depends, Response
+from fastapi import APIRouter, BackgroundTasks, Cookie, Depends, Response
 from sqlmodel import Session
 
 from app.api.routes.v1.dto.auth import LoginRequestDTO, RegisterRequestDTO
 from app.api.routes.v1.dto.message import MessageResponse
 from app.api.routes.v1.providers.auth import email as email_auth_provider
+from app.api.routes.v1.providers.auth.config import LOGIN_SESSION_COOKIE_NAME
 from app.core.db.models import User
 from app.core.db.setup import create_db_session
 
@@ -48,6 +49,17 @@ async def authenticate(
         db_session=db_session,
         auth_session_id=auth_session_id,
         response=response,
+    )
+
+
+@email_auth_router.post("/logout")
+async def logout(
+    db_session: DBSessionDependency,
+    session_id: Annotated[str | None, Cookie(alias=LOGIN_SESSION_COOKIE_NAME)],
+    response: Response,
+):
+    return await email_auth_provider.logout(
+        db_session=db_session, session_id=session_id, response=response
     )
 
 

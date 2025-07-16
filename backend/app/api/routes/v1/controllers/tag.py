@@ -11,7 +11,7 @@ from app.api.routes.v1.providers.auth.email import get_current_user
 from app.core.db.models import User
 from app.core.db.setup import create_db_session
 
-tag_router = APIRouter(prefix="/v1")
+tag_router = APIRouter(prefix="/v1", tags=["Tag management"])
 
 DBSessionDependency = Annotated[Session, Depends(create_db_session)]
 CurrentUserDependency = Annotated[User, Depends(get_current_user)]

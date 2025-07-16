@@ -8,6 +8,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Spinner } from "@/components/ui/Spinner";
+import ClickableTag from "@/components/ui/custom/ClickableTag";
 import Show from "@/components/wrappers/Show";
 import { Post } from "@/lib/api/dto/post";
 import { getFileURL } from "@/lib/api/requests/file";
@@ -65,16 +66,18 @@ export default function PostCard({
       // Optimistic update
       const previousIsLiked = isLiked;
       const previousLikes = localLikes;
-      
+
       setIsLiked(!previousIsLiked);
-      setLocalLikes(prev => previousIsLiked ? prev - 1 : prev + 1);
-      
+      setLocalLikes((prev) => (previousIsLiked ? prev - 1 : prev + 1));
+
       return { previousIsLiked, previousLikes };
     },
     onSuccess: (data) => {
       setLocalLikes(data.likes);
       // Invalidate and refetch queries
-      queryClient.invalidateQueries({ queryKey: ["post-liked", post.id, currentUser?.id] });
+      queryClient.invalidateQueries({
+        queryKey: ["post-liked", post.id, currentUser?.id],
+      });
       queryClient.invalidateQueries({ queryKey: ["posts"] });
       queryClient.invalidateQueries({ queryKey: ["featured-posts"] });
     },
@@ -145,9 +148,9 @@ export default function PostCard({
                       }}
                       disabled={likeMutation.isPending}
                       className={`flex items-center gap-1 transition-colors ${
-                        isLiked 
-                          ? 'text-red-500 hover:text-red-600' 
-                          : 'text-muted-foreground hover:text-red-500'
+                        isLiked
+                          ? "text-red-500 hover:text-red-600"
+                          : "text-muted-foreground hover:text-red-500"
                       }`}
                     >
                       <Heart
@@ -161,9 +164,12 @@ export default function PostCard({
               <Show when={!!(post.tags && post.tags.length > 0)}>
                 <div className="flex flex-wrap gap-1 mt-2">
                   {post.tags.slice(0, 3).map((tag) => (
-                    <Badge key={tag.id} variant="outline" className="text-xs">
-                      {tag.name}
-                    </Badge>
+                    <ClickableTag
+                      key={tag.id}
+                      tag={tag}
+                      variant="outline"
+                      size="sm"
+                    />
                   ))}
                 </div>
               </Show>
@@ -227,9 +233,9 @@ export default function PostCard({
                     onClick={() => likeMutation.mutate()}
                     disabled={likeMutation.isPending}
                     className={`flex items-center gap-1 transition-colors ${
-                      isLiked 
-                        ? 'text-red-500 hover:text-red-600' 
-                        : 'text-muted-foreground hover:text-red-500'
+                      isLiked
+                        ? "text-red-500 hover:text-red-600"
+                        : "text-muted-foreground hover:text-red-500"
                     }`}
                   >
                     <Heart
@@ -243,9 +249,12 @@ export default function PostCard({
             <Show when={!!(post.tags && post.tags.length > 0)}>
               <div className="flex flex-wrap gap-1">
                 {post.tags.map((tag) => (
-                  <Badge key={tag.id} variant="outline" className="text-xs">
-                    {tag.name}
-                  </Badge>
+                  <ClickableTag
+                    key={tag.id}
+                    tag={tag}
+                    variant="outline"
+                    size="sm"
+                  />
                 ))}
               </div>
             </Show>
@@ -280,9 +289,9 @@ export default function PostCard({
                     onClick={() => likeMutation.mutate()}
                     disabled={likeMutation.isPending}
                     className={`flex items-center gap-1 transition-colors ${
-                      isLiked 
-                        ? 'text-red-500 hover:text-red-600' 
-                        : 'text-muted-foreground hover:text-red-500'
+                      isLiked
+                        ? "text-red-500 hover:text-red-600"
+                        : "text-muted-foreground hover:text-red-500"
                     }`}
                   >
                     <Heart
@@ -296,9 +305,12 @@ export default function PostCard({
             <Show when={!!(post.tags && post.tags.length > 0)}>
               <div className="flex flex-wrap gap-1">
                 {post.tags.map((tag) => (
-                  <Badge key={tag.id} variant="outline" className="text-xs">
-                    {tag.name}
-                  </Badge>
+                  <ClickableTag
+                    key={tag.id}
+                    tag={tag}
+                    variant="outline"
+                    size="sm"
+                  />
                 ))}
               </div>
             </Show>
