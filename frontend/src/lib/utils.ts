@@ -7,7 +7,15 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function timeAgo(date: Date | string): string {
-  return formatDistanceToNow(new Date(date), { addSuffix: true });
+  if (!date) return "Unknown date";
+  
+  const parsedDate = new Date(date);
+  
+  if (Number.isNaN(parsedDate.getTime())) {
+    return "Invalid date";
+  }
+  
+  return formatDistanceToNow(parsedDate, { addSuffix: true });
 }
 
 export function formatNumber(num: number): string {

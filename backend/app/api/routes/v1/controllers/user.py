@@ -20,7 +20,7 @@ DBSessionDependency = Annotated[Session, Depends(create_db_session)]
 CurrentUserDependency = Annotated[User, Depends(get_current_user)]
 
 
-user_router = APIRouter(prefix="/v1")
+user_router = APIRouter(prefix="/v1", tags=["User management"])
 
 
 @user_router.get("/users/me", response_model=UserDTO)

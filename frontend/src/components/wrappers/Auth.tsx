@@ -4,6 +4,8 @@ import { me } from "@/lib/api/requests/user";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { ReactNode, useEffect } from "react";
+import { Spinner } from "../ui/Spinner";
+
 export function Authenticated({
   children,
   redirect,
@@ -34,16 +36,17 @@ export function Unauthenticated({
   const { isSuccess, isError } = useQuery({
     queryKey: ["/me"],
     queryFn: me,
+    retry: false
   });
 
   useEffect(() => {
     if (isSuccess) {
-      router.push(redirect ?? "/login");
+      router.push(redirect ?? "/");
     }
   }, [isSuccess, router, redirect]);
   if (isError) {
     return children;
   } else {
-    return null;
+    return <Spinner />;
   }
 }

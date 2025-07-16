@@ -2,7 +2,7 @@ from sqlmodel import Session, select
 
 from app.api.routes.v1.dto.message import MessageResponse
 from app.api.routes.v1.dto.tag import TagCreationDTO
-from app.core.db.models import Tag, User
+from app.core.db.models import Post, PostTagLink, Tag, User
 from app.core.security.checkers import check_existence, check_non_existence
 from app.core.security.permissions import (
     ACTION_CREATE,
@@ -52,14 +52,15 @@ async def get_related_posts(
     db_session: Session, tag_id: str, skip: int, limit: int
 ):
     tag = check_existence(db_session.get(Tag, tag_id), detail="Tag not found.")
-    posts = [post.to_dto() for post in tag.posts]
-    start = skip if len(posts) > skip * limit - 1 else len(posts) - 1
-    end = (
-        skip * limit + limit
-        if len(posts) > skip * limit + limit - 1
-        else len(posts) - 1
-    )
-    return posts[start:end]
+    posts = db_session.exec(
+        select(Post)
+        .join(PostTagLink)
+        .join(Tag)
+        .where(Tag.id == tag.id)
+        .offset(skip)
+        .limit(limit)
+    ).all()
+    return [post.to_dto() for post in posts]
 
 
 async def delete_tag(db_session: Session, current_user: User, tag_id: str):

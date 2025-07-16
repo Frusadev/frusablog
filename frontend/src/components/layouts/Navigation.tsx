@@ -20,14 +20,19 @@ import {
   DialogTitle, 
   DialogTrigger 
 } from "@/components/ui/dialog";
-import { Menu, User, Mail, Github, Linkedin, ExternalLink, LogIn } from "lucide-react";
+import { Menu, User, Mail, Github, Linkedin, ExternalLink, LogIn, LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useOptionalCurrentUser } from "@/hooks/useAuth";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { logout } from "@/lib/api/requests/auth";
+import { toast } from "sonner";
 
 export default function Navigation() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [aboutOpen, setAboutOpen] = useState(false);
   const [contactOpen, setContactOpen] = useState(false);
+  const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
   
   // Get current user data (optional, doesn't throw on error)
   const { data: currentUser, isError: isNotAuthenticated } = useOptionalCurrentUser();
@@ -35,27 +40,44 @@ export default function Navigation() {
   // User is not authenticated if there's an error OR no current user data
   const isUserNotAuthenticated = isNotAuthenticated || !currentUser;
 
-  const biography = `I'm Daniel Ametsowou and this is my story.
+  // Logout mutation
+  const logoutMutation = useMutation({
+    mutationFn: logout,
+    onSuccess: () => {
+      // Clear all queries and redirect to home
+      queryClient.clear();
+      router.push("/");
+      toast.success("Logged out successfully");
+      setLogoutConfirmOpen(false);
+    },
+    onError: (error) => {
+      toast.error("Failed to logout. Please try again.");
+      console.error("Logout error:", error);
+      setLogoutConfirmOpen(false);
+    },
+  });
 
-I didn't choose accounting. My parents did.
-They wanted what any parent wants: stability, opportunity, a clear path. I respected that. I followed it. I studied accounting because I wanted to make them proud and because I believed there was value in understanding the systems that shape the world.
+  const handleLogout = () => {
+    logoutMutation.mutate();
+  };
 
-But while I was learning about balance sheets and financial frameworks, something else was pulling at me something louder, deeper, and impossible to ignore.
+  const confirmLogout = () => {
+    setLogoutConfirmOpen(true);
+  };
 
-At 12 years old, I discovered programming. I began with C++, just me, my curiosity, and a secondhand laptop. I didn't know what I was doing but I loved figuring it out. One bug at a time, I taught myself to think like a machine and dream like a maker.
+  const biography = `I’m Daniel Ametsowou. I was supposed to be an accountant.
 
-Since then, I've explored Python, web development, Rust, Go always chasing the joy of building things from scratch.
+Yep. Stable job, clear path, makes the parents proud. The classic checklist. I played along. Sat through classes, memorized frameworks, nodded politely at the “future.” But deep down, I couldn’t care less about reconciling spreadsheets.
 
-I'm not just a developer. I'm a content creator, a community builder, and a curious soul. I founded LOSL-C, a growing tech collective where people like me self-taught, hungry, and maybe a little different can grow together.
+At the same time, I had a secondhand laptop and a weird obsession with code. I discovered C++ at 12. It made absolutely no sense, which is exactly why I couldn’t stop. I broke stuff, fixed it, broke it again. Slowly, I started to get it. Not just how computers work, but how I work.
 
-My story is not about choosing between accounting and development. It's about honoring both turning a path I didn't choose into a launching pad for the one I'm creating.
+Turns out I’m not built for templates. I’m built to build. I’ve been like that since I was a kid, messing with chemistry kits, wires, electricity, anything I could tinker with.
 
-I believe in learning out loud. In building with purpose.
-I believe in breaking molds and in helping others break theirs too.
-And if there's one thing I've learned, it's this:
-You don't have to fit in to make something that stands out.
+Now I write Python, TypeScript, and Nim. I mess around with web dev, not for the resume, but because making something from nothing still feels like magic. I also started LOSL-C, a space for people like me. Self-taught, a little unconventional, and not waiting for permission to create.
 
-I'm Daniel and I'm just getting started.`;
+I’m not here to pivot or tell a sob story. I’m just following what feels real. Right now, that means building, learning out loud, and helping others do the same.
+
+BTW, Growth isn’t linear. Neither is my commit history. 😂`;
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -171,8 +193,8 @@ I'm Daniel and I'm just getting started.`;
               </DialogContent>
             </Dialog>
 
-            {/* Login Button for unauthenticated users */}
-            {isUserNotAuthenticated && (
+            {/* Auth Button - Login for unauthenticated, Logout for authenticated */}
+            {isUserNotAuthenticated ? (
               <Button 
                 variant="default" 
                 size="sm"
@@ -182,6 +204,17 @@ I'm Daniel and I'm just getting started.`;
                 <LogIn className="w-4 h-4" />
                 Login
               </Button>
+            ) : (
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={confirmLogout}
+                disabled={logoutMutation.isPending}
+                className="flex items-center gap-2"
+              >
+                <LogOut className="w-4 h-4" />
+                {logoutMutation.isPending ? "Logging out..." : "Logout"}
+              </Button>
             )}
 
             <ThemeSwitch />
@@ -189,8 +222,8 @@ I'm Daniel and I'm just getting started.`;
 
           {/* Mobile Navigation */}
           <div className="md:hidden flex items-center space-x-2">
-            {/* Login Button for mobile - unauthenticated users only */}
-            {isUserNotAuthenticated && (
+            {/* Auth Button for mobile */}
+            {isUserNotAuthenticated ? (
               <Button 
                 variant="outline" 
                 size="sm"
@@ -199,6 +232,17 @@ I'm Daniel and I'm just getting started.`;
               >
                 <LogIn className="w-3 h-3" />
                 Login
+              </Button>
+            ) : (
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={confirmLogout}
+                disabled={logoutMutation.isPending}
+                className="flex items-center gap-1"
+              >
+                <LogOut className="w-3 h-3" />
+                {logoutMutation.isPending ? "..." : "Logout"}
               </Button>
             )}
             
@@ -263,8 +307,8 @@ I'm Daniel and I'm just getting started.`;
                     </div>
                   </div>
 
-                  {/* Login Button for mobile - unauthenticated users only */}
-                  {isUserNotAuthenticated && (
+                  {/* Auth Button for mobile sheet */}
+                  {isUserNotAuthenticated ? (
                     <div className="border-t pt-4">
                       <Button 
                         onClick={() => router.push("/login")}
@@ -274,6 +318,18 @@ I'm Daniel and I'm just getting started.`;
                         Login
                       </Button>
                     </div>
+                  ) : (
+                    <div className="border-t pt-4">
+                      <Button 
+                        onClick={confirmLogout}
+                        disabled={logoutMutation.isPending}
+                        variant="outline"
+                        className="w-full flex items-center gap-2"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        {logoutMutation.isPending ? "Logging out..." : "Logout"}
+                      </Button>
+                    </div>
                   )}
                 </div>
               </SheetContent>
@@ -281,6 +337,39 @@ I'm Daniel and I'm just getting started.`;
           </div>
         </div>
       </div>
+
+      {/* Logout Confirmation Dialog */}
+      <Dialog open={logoutConfirmOpen} onOpenChange={setLogoutConfirmOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <LogOut className="w-5 h-5" />
+              Confirm Logout
+            </DialogTitle>
+            <DialogDescription>
+              Are you sure you want to log out? You&apos;ll need to sign in again to access your account.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-2 pt-4">
+            <Button 
+              onClick={handleLogout}
+              disabled={logoutMutation.isPending}
+              variant="destructive"
+              className="w-full"
+            >
+              {logoutMutation.isPending ? "Logging out..." : "Yes, Log Out"}
+            </Button>
+            <Button 
+              onClick={() => setLogoutConfirmOpen(false)}
+              variant="outline"
+              className="w-full"
+              disabled={logoutMutation.isPending}
+            >
+              Cancel
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </nav>
   );
 }
