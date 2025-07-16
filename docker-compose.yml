@@ -7,6 +7,7 @@ services:
         - NEXT_PUBLIC_SERVER_URL=${NEXT_PUBLIC_SERVER_URL}
         - NEXT_PUBLIC_API_VERSION=v1
         - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+        - BACKEND_URL=${BACKEND_URL}
 
     ports:
       - "3000:3000"
