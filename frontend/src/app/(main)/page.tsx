@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getPosts, getFeaturedPosts } from "@/lib/api/requests/post";
 import { getPublicStats } from "@/lib/api/requests/stats";
@@ -35,6 +35,10 @@ export default function MainPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [currentFeaturedIndex, setCurrentFeaturedIndex] = useState(0);
   const [isCarouselPaused, setIsCarouselPaused] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const carouselRef = useRef<HTMLDivElement>(null);
+  const touchStartX = useRef<number>(0);
+  const touchEndX = useRef<number>(0);
   const router = useRouter();
 
   // Initialize visit tracking for the main page
@@ -72,18 +76,74 @@ export default function MainPage() {
   const stats = statsQuery.data;
   const hasMorePosts = posts.length === POSTS_PER_PAGE;
 
+  // Carousel navigation functions with animation support
+  const nextSlide = useCallback(() => {
+    if (isTransitioning || featuredPosts.length <= 1) return;
+    setIsTransitioning(true);
+    setCurrentFeaturedIndex((prev) =>
+      prev === featuredPosts.length - 1 ? 0 : prev + 1,
+    );
+    setTimeout(() => setIsTransitioning(false), 500);
+  }, [isTransitioning, featuredPosts.length]);
+
+  const prevSlide = useCallback(() => {
+    if (isTransitioning || featuredPosts.length <= 1) return;
+    setIsTransitioning(true);
+    setCurrentFeaturedIndex((prev) =>
+      prev === 0 ? featuredPosts.length - 1 : prev - 1,
+    );
+    setTimeout(() => setIsTransitioning(false), 500);
+  }, [isTransitioning, featuredPosts.length]);
+
+  const goToSlide = useCallback(
+    (index: number) => {
+      if (isTransitioning || index === currentFeaturedIndex) return;
+      setIsTransitioning(true);
+      setCurrentFeaturedIndex(index);
+      setTimeout(() => setIsTransitioning(false), 500);
+    },
+    [isTransitioning, currentFeaturedIndex],
+  );
+
+  // Touch event handlers
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.targetTouches[0].clientX;
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    touchEndX.current = e.targetTouches[0].clientX;
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStartX.current || !touchEndX.current) return;
+
+    const distance = touchStartX.current - touchEndX.current;
+    const isLeftSwipe = distance > 50;
+    const isRightSwipe = distance < -50;
+
+    if (isLeftSwipe && featuredPosts.length > 1) {
+      nextSlide();
+    }
+    if (isRightSwipe && featuredPosts.length > 1) {
+      prevSlide();
+    }
+
+    // Reset touch positions
+    touchStartX.current = 0;
+    touchEndX.current = 0;
+  };
+
   // Auto-rotate featured posts every 5 seconds (pause on hover)
   useEffect(() => {
-    if (featuredPosts.length <= 1 || isCarouselPaused) return;
+    if (featuredPosts.length <= 1 || isCarouselPaused || isTransitioning)
+      return;
 
     const interval = setInterval(() => {
-      setCurrentFeaturedIndex((prev) =>
-        prev === featuredPosts.length - 1 ? 0 : prev + 1,
-      );
+      nextSlide();
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [featuredPosts.length, isCarouselPaused]);
+  }, [featuredPosts.length, isCarouselPaused, isTransitioning, nextSlide]);
 
   // Keyboard navigation
   useEffect(() => {
@@ -92,20 +152,16 @@ export default function MainPage() {
 
       if (e.key === "ArrowLeft") {
         e.preventDefault();
-        setCurrentFeaturedIndex((prev) =>
-          prev === 0 ? featuredPosts.length - 1 : prev - 1,
-        );
+        prevSlide();
       } else if (e.key === "ArrowRight") {
         e.preventDefault();
-        setCurrentFeaturedIndex((prev) =>
-          prev === featuredPosts.length - 1 ? 0 : prev + 1,
-        );
+        nextSlide();
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [featuredPosts.length]);
+  }, [featuredPosts.length, prevSlide, nextSlide]);
 
   return (
     <div>
@@ -127,70 +183,101 @@ export default function MainPage() {
                   Featured Stories
                 </h2>
                 <p className="text-muted-foreground max-w-2xl mx-auto">
-                  Discover my most compelling articles, handpicked for their insight and impact
+                  Discover my most compelling articles, handpicked for their
+                  insight and impact
                 </p>
               </div>
 
-              <div className="relative">
+              <div className="relative overflow-hidden">
                 {/* Main Featured Post */}
                 <div className="mb-6">
                   <Card
-                    className="overflow-hidden border-2 border-border/50 shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-muted/20 to-background"
+                    ref={carouselRef}
+                    className="overflow-hidden border-2 border-border/50 shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-muted/20 to-background px-0 pb-8 lg:pb-10"
                     onMouseEnter={() => setIsCarouselPaused(true)}
                     onMouseLeave={() => setIsCarouselPaused(false)}
+                    onTouchStart={handleTouchStart}
+                    onTouchMove={handleTouchMove}
+                    onTouchEnd={handleTouchEnd}
                   >
-                    <div className="grid grid-cols-1 lg:grid-cols-2 min-h-[400px]">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 min-h-[480px] lg:min-h-[520px] relative">
                       {/* Image Section */}
                       <div className="relative overflow-hidden bg-muted">
-                        <div className="transition-all duration-500 ease-in-out">
-                          <Show
-                            when={!!featuredPosts[currentFeaturedIndex]?.cover}
+                        <div
+                          className="transition-all duration-500 ease-in-out transform"
+                          style={{
+                            transform: `translateX(-${currentFeaturedIndex * 100}%)`,
+                          }}
+                        >
+                          <div
+                            className="flex"
+                            style={{ width: `${featuredPosts.length * 100}%` }}
                           >
-                            <Image
-                              src={
-                                getResourceUrl(
-                                  featuredPosts[currentFeaturedIndex]?.cover,
-                                ) || "/nomedia.png"
-                              }
-                              alt={
-                                featuredPosts[currentFeaturedIndex]?.title ||
-                                "Featured post"
-                              }
-                              width={600}
-                              height={400}
-                              className="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
-                              onError={(e) => {
-                                (e.target as HTMLImageElement).src =
-                                  "/nomedia.png";
-                              }}
-                            />
-                          </Show>
-                          <Show
-                            when={!featuredPosts[currentFeaturedIndex]?.cover}
-                          >
-                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-muted/50">
-                              <div className="text-center">
-                                <Star className="w-16 h-16 mx-auto mb-2 text-muted-foreground" />
-                                <p className="text-muted-foreground">
-                                  Featured Article
-                                </p>
+                            {featuredPosts.map((post, index) => (
+                              <div
+                                key={post.id}
+                                className="w-full flex-shrink-0"
+                              >
+                                <Show when={!!post.cover}>
+                                  <Image
+                                    src={
+                                      getResourceUrl(post.cover) ||
+                                      "/nomedia.png"
+                                    }
+                                    alt={post.title || "Featured post"}
+                                    width={600}
+                                    height={400}
+                                    className={`w-full h-full object-cover transition-all duration-700 ${
+                                      index === currentFeaturedIndex
+                                        ? "hover:scale-105"
+                                        : "scale-100"
+                                    }`}
+                                    onError={(e) => {
+                                      (e.target as HTMLImageElement).src =
+                                        "/nomedia.png";
+                                    }}
+                                  />
+                                </Show>
+                                <Show when={!post.cover}>
+                                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-muted/50">
+                                    <div className="text-center">
+                                      <Star className="w-16 h-16 mx-auto mb-2 text-muted-foreground" />
+                                      <p className="text-muted-foreground">
+                                        Featured Article
+                                      </p>
+                                    </div>
+                                  </div>
+                                </Show>
                               </div>
-                            </div>
-                          </Show>
+                            ))}
+                          </div>
                         </div>
 
                         {/* Featured Badge */}
-                        <div className="absolute top-4 left-4">
-                          <Badge className="bg-primary/90 text-primary-foreground border-none shadow-lg">
+                        <div className="absolute top-4 left-4 z-10">
+                          <Badge className="bg-primary/90 text-primary-foreground border-none shadow-lg animate-in fade-in-50 slide-in-from-left-5 duration-300">
                             <Star className="w-3 h-3 mr-1 fill-current" />
                             Featured
                           </Badge>
                         </div>
+
+                        {/* Swipe indicator for mobile */}
+                        <Show when={featuredPosts.length > 1}>
+                          <div className="absolute bottom-4 right-4 z-10 bg-black/20 backdrop-blur-sm rounded-full px-3 py-1 text-white text-xs animate-pulse lg:hidden">
+                            Swipe to explore
+                          </div>
+                        </Show>
                       </div>
 
                       {/* Content Section */}
                       <div className="p-8 flex flex-col justify-center">
-                        <div className="space-y-4 transition-all duration-500 ease-in-out">
+                        <div
+                          className={`space-y-4 transition-all duration-500 ease-in-out ${
+                            isTransitioning
+                              ? "opacity-0 transform translate-x-4"
+                              : "opacity-100 transform translate-x-0"
+                          }`}
+                        >
                           <div className="flex items-center gap-3 text-sm text-muted-foreground">
                             <div className="flex items-center gap-2">
                               <User className="w-4 h-4" />
@@ -255,7 +342,7 @@ export default function MainPage() {
                                 )}`,
                               )
                             }
-                            className="w-full sm:w-auto"
+                            className="w-full sm:w-auto transform hover:scale-105 transition-all duration-200"
                             size="lg"
                           >
                             Read Article
@@ -268,16 +355,13 @@ export default function MainPage() {
 
                 {/* Navigation Controls */}
                 <Show when={featuredPosts.length > 1}>
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between h-16 px-4">
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() =>
-                        setCurrentFeaturedIndex((prev) =>
-                          prev === 0 ? featuredPosts.length - 1 : prev - 1,
-                        )
-                      }
-                      className="flex items-center gap-2"
+                      onClick={prevSlide}
+                      disabled={isTransitioning}
+                      className="flex items-center gap-2 hover:scale-105 transition-all duration-200"
                     >
                       <ChevronLeft className="w-4 h-4" />
                       Previous
@@ -288,11 +372,12 @@ export default function MainPage() {
                       {featuredPosts.map((_, index) => (
                         <button
                           key={index}
-                          onClick={() => setCurrentFeaturedIndex(index)}
-                          className={`w-2 h-2 rounded-full transition-all duration-200 ${
+                          onClick={() => goToSlide(index)}
+                          disabled={isTransitioning}
+                          className={`h-2 rounded-full transition-all duration-300 hover:scale-110 ${
                             index === currentFeaturedIndex
-                              ? "bg-primary w-6"
-                              : "bg-muted-foreground/30 hover:bg-muted-foreground/50"
+                              ? "bg-primary w-6 scale-110"
+                              : "bg-muted-foreground/30 hover:bg-muted-foreground/50 w-2"
                           }`}
                         />
                       ))}
@@ -301,12 +386,9 @@ export default function MainPage() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() =>
-                        setCurrentFeaturedIndex((prev) =>
-                          prev === featuredPosts.length - 1 ? 0 : prev + 1,
-                        )
-                      }
-                      className="flex items-center gap-2"
+                      onClick={nextSlide}
+                      disabled={isTransitioning}
+                      className="flex items-center gap-2 hover:scale-105 transition-all duration-200"
                     >
                       Next
                       <ChevronRight className="w-4 h-4" />
@@ -452,7 +534,9 @@ export default function MainPage() {
                               </span>
                               <span className="flex-shrink-0">•</span>
                               <span className="flex-shrink-0">
-                                {post.created_at ? timeAgo(post.created_at) : "Unknown date"}
+                                {post.created_at
+                                  ? timeAgo(post.created_at)
+                                  : "Unknown date"}
                               </span>
                             </div>
                             <div className="flex items-center gap-1 mt-2 overflow-hidden">
