@@ -47,6 +47,7 @@ app.add_middleware(
         "https://ametsowou.me",
         "https://www.ametsowou.me",
         "https://blog.ametsowou.me",
+        "https://www.blog.ametsowou.me",
         "https://blog.localhost",
     ],
     allow_credentials=True,
