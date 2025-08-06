@@ -10,7 +10,7 @@ services:
         - BACKEND_URL=${BACKEND_URL}
 
     ports:
-      - "3000:3000"
+      - "${FRONTEND_PORT}:3000"
     environment:
       - NEXT_PUBLIC_SERVER_URL=${NEXT_PUBLIC_SERVER_URL}
       - NEXT_PUBLIC_API_VERSION=${NEXT_PUBLIC_API_VERSION}
@@ -24,7 +24,7 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     ports:
-      - "8000:8000"
+      - "${BACKEND_PORT}:8000"
     depends_on:
       db:
         condition: service_healthy
@@ -51,7 +51,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U dbadmin -d frusablog"]
+      test: ["CMD-SHELL", "pg_isready -U ${PG_USER} -d ${PG_DATABASE}"]
       interval: 10s
       timeout: 5s
       retries: 5
