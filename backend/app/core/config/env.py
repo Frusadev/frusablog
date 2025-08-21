@@ -16,6 +16,7 @@ EnvKey = Literal[
     "DB_STRING",
     "ADMIN_EMAIL",
     "GEMINI_API_KEY"
+    "CORS_ORIGINS",
 ]
 
 
