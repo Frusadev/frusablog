@@ -9,6 +9,7 @@ from app.api.routes.v1.dto.file import ResourceDTO
 from app.api.routes.v1.dto.post import PostDTO
 from app.api.routes.v1.dto.tag import TagDTO
 from app.api.routes.v1.dto.user import DetailedUserInfo, UserDTO
+from app.api.routes.v1.dto.user_action import UserMessageDTO
 from app.utils.crypto import gen_id
 
 
@@ -62,6 +63,10 @@ class User(SQLModel, table=True):
     visits: list["VisitAction"] = Relationship(
         back_populates="user", cascade_delete=True
     )
+    view_actions: list["ViewAction"] = Relationship(
+        back_populates="user", cascade_delete=True
+    )
+    in_newsletter: bool = Field(default=False)
 
     def to_dto(self):
         return UserDTO(id=self.id, username=self.username, name=self.name)
@@ -75,6 +80,28 @@ class User(SQLModel, table=True):
             joined_at=self.joined_at,
             banned=self.banned,
             last_ban_motive=self.last_ban_motive,
+            in_newsletter=self.in_newsletter,
+        )
+
+
+class UserMessage(SQLModel, table=True):
+    id: UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    user_id: str = Field(foreign_key="user.id")
+    subject: str
+    content: str
+    viewed: bool = False
+    created_at: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc)
+    )
+
+    def to_dto(self):
+        return UserMessageDTO(
+            id=self.id,
+            user_id=self.user_id,
+            subject=self.subject,
+            content=self.content,
+            viewed=self.viewed,
+            created_at=self.created_at,
         )
 
 
@@ -197,12 +224,14 @@ class FileResource(SQLModel, table=True):
 
 class ViewAction(SQLModel, table=True):
     id: str = Field(default_factory=gen_id, primary_key=True)
+    user_id: str | None = Field(foreign_key="user.id", default=None)
     post_id: UUID = Field(foreign_key="post.id")
     created_at: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc)
     )
     post: Post = Relationship(back_populates="views")
     view_time: int = 0  # in seconds
+    user: User | None = Relationship(back_populates="view_actions")
 
 
 class VisitAction(SQLModel, table=True):
