@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>New User Message • {{ site_name or 'ametsowou.me' }}</title>
+  <style>
+    :root { color-scheme: light dark; }
+    body { margin:0; padding:0; background:#f5f7fa; background:oklch(0.967 0.001 286.375); -webkit-font-smoothing:antialiased; }
+    table { border-collapse:collapse; }
+    .wrapper { width:100%; table-layout:fixed; }
+    .outer { width:100%; max-width:600px; margin:0 auto; }
+    .accent-bar { height:4px; background:#2f3034; background:oklch(0.21 0.006 285.885); border-radius:4px 4px 0 0; }
+    .card { background:#fff; background:oklch(1 0 0); border:1px solid #e3e6ea; border:1px solid oklch(0.92 0.004 286.32); border-radius:10px; padding:40px 44px 44px; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,Cantarell,sans-serif; color:#22252a; color:oklch(0.141 0.005 285.823); line-height:1.55; }
+    h1 { margin:0 0 10px; font-size:22px; font-weight:600; }
+    .meta { font-size:12px; color:#66707b; color:oklch(0.552 0.016 285.938); margin:0 0 18px; }
+    .subject { font-size:14px; font-weight:600; margin:0 0 10px; color:#22252a; color:oklch(0.21 0.006 285.885); }
+    .content-box { background:#f6f7f9; background:oklch(0.967 0.001 286.375); border:1px solid #e3e6ea; border:1px solid oklch(0.92 0.004 286.32); padding:16px 18px 18px; border-radius:6px; font-size:14px; white-space:pre-wrap; }
+    .actions { margin-top:24px; }
+    .btn { display:inline-block; background:#2f3034; background:oklch(0.21 0.006 285.885); color:#fff; color:oklch(0.985 0 0); text-decoration:none; padding:10px 20px; border-radius:6px; font-size:13px; font-weight:600; margin-right:8px; }
+    .btn.secondary { background:#66707b; background:oklch(0.552 0.016 285.938); }
+    .footer { border-top:1px solid #e3e6ea; border-top:1px solid oklch(0.92 0.004 286.32); margin-top:28px; padding-top:14px; font-size:11px; text-align:center; color:#66707b; color:oklch(0.552 0.016 285.938); }
+    @media (max-width:640px){ .card{padding:30px 26px;} h1{font-size:20px;} }
+    @media (prefers-color-scheme:dark){ body{background:#14161b; background:oklch(0.141 0.005 285.823);} .card{background:#303237; background:oklch(0.21 0.006 285.885); color:oklch(0.985 0 0);} .content-box{background:#2a2c30; background:oklch(0.274 0.006 286.033); border-color:oklch(1 0 0 / 10%);} .footer{border-top-color:oklch(1 0 0 / 10%); color:oklch(0.705 0.015 286.067);} }
+  </style>
+</head>
+<body>
+  <table role="presentation" class="wrapper" width="100%" cellpadding="0" cellspacing="0">
+    <tr>
+      <td align="center" style="padding:20px;">
+        <table role="presentation" class="outer" cellpadding="0" cellspacing="0">
+          <tr><td class="accent-bar"></td></tr>
+          <tr>
+            <td class="card">
+              <h1>User Message Received</h1>
+              <p class="meta">From <strong>{{ user.name or user.username }}</strong> &lt;{{ user.email }}&gt; • {{ message.created_at.strftime('%Y-%m-%d %H:%M') if message.created_at else 'Just now' }}</p>
+              <div class="subject">Subject: {{ message.subject }}</div>
+              <div class="content-box">{{ message.content }}</div>
+              <div class="actions">
+                {% if reply_email %}<a href="mailto:{{ reply_email }}?subject=Re:%20{{ message.subject|urlencode }}" class="btn">Reply</a>{% endif %}
+                <a href="{{ admin_url }}" class="btn secondary">Open Admin Panel</a>
+              </div>
+              <div class="footer">Automated moderation alert • © {{ year }} {{ site_name or 'ametsowou.me' }}</div>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
