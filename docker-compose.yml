@@ -39,6 +39,7 @@ services:
       - FRONTEND_URL=${FRONTEND_URL}
       - ADMIN_EMAIL=${ADMIN_EMAIL}
       - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - CORS_ORIGINS=${CORS_ORIGINS}
     volumes:
       - fs:/home/runner/app/fs
 
