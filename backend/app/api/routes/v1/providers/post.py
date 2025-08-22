@@ -10,6 +10,7 @@ from app.api.routes.v1.dto.post import (
 )
 from app.core.db.builders.permission import PermissionBuilder
 from app.core.db.models import Post, Role, Tag, User, ViewAction
+from app.core.logging.log import log_error
 from app.core.security.checkers import check_existence
 from app.core.security.permissions import (
     ACTION_READ,
@@ -24,7 +25,10 @@ from app.core.services.ai.translation import SupportedLanguages
 
 
 async def create_post(
-    db_session: Session, current_user: User, data: PostCreationDTO
+    db_session: Session,
+    current_user: User,
+    data: PostCreationDTO,
+    notify: bool = True,
 ):
     PermissionChecker(
         db_session=db_session,
@@ -60,6 +64,45 @@ async def create_post(
     ).make()
     db_session.add_all([post, write_role, write_permission])
     db_session.commit()
+    db_session.refresh(post)
+
+    if notify and post.published:
+        try:
+            from app.core.config.env import get_env
+            from app.core.services.email import send_templated_email
+
+            subscribers = db_session.exec(
+                select(User).where(User.in_newsletter == True)
+            ).all()
+            base_frontend = get_env("FRONTEND_URL")
+            post_url = f"{base_frontend}/post/{post.id}"
+            cover_url = (
+                f"{get_env('BACKEND_URL')}/v1/file/{post.cover}"
+                if post.cover
+                else None
+            )
+            unsubscribe_url = f"{base_frontend}/account/unsubscribe"
+            author_name = current_user.name or current_user.username
+            for subscriber in subscribers:
+                if not subscriber.in_newsletter:
+                    continue
+                send_templated_email(
+                    email=subscriber.email,
+                    subject=f"New Post: {post.title}",
+                    template_name="newsletter_post",
+                    context={
+                        "post": post,
+                        "user": subscriber,
+                        "post_url": post_url,
+                        "cover_url": cover_url,
+                        "unsubscribe_url": unsubscribe_url,
+                        "author_name": author_name,
+                        "site_name": get_env("SITE_NAME", "ametsowou.me"),
+                    },
+                )
+        except Exception:
+            log_error("Could not send email notification for post.")
+
     return post.to_dto()
 
 
@@ -148,6 +191,44 @@ async def edit_post(
     post.tags = tags
     db_session.add(post)
     db_session.commit()
+
+    if post.published is False and data.published is True:
+        try:
+            from app.core.config.env import get_env
+            from app.core.services.email import send_templated_email
+
+            subscribers = db_session.exec(
+                select(User).where(User.in_newsletter == True)
+            ).all()
+            base_frontend = get_env("FRONTEND_URL")
+            post_url = f"{base_frontend}/post/{post.id}"
+            cover_url = (
+                f"{get_env('BACKEND_URL')}/v1/file/{post.cover}"
+                if post.cover
+                else None
+            )
+            unsubscribe_url = f"{base_frontend}/account/unsubscribe"
+            author_name = current_user.name or current_user.username
+            for subscriber in subscribers:
+                if not subscriber.in_newsletter:
+                    continue
+                send_templated_email(
+                    email=subscriber.email,
+                    subject=f"New Post: {post.title}",
+                    template_name="newsletter_post",
+                    context={
+                        "post": post,
+                        "user": subscriber,
+                        "post_url": post_url,
+                        "cover_url": cover_url,
+                        "unsubscribe_url": unsubscribe_url,
+                        "author_name": author_name,
+                        "site_name": get_env("SITE_NAME", "ametsowou.me"),
+                    },
+                )
+        except Exception:
+            log_error("Could not send email notification for post.")
+
     return post.to_dto()
 
 
@@ -201,6 +282,53 @@ async def get_posts(db_session: Session, skip: int, limit: int):
         .limit(limit)
         .order_by(desc(Post.created_at))
     ).all()
+    return [post.to_dto() for post in posts]
+
+
+async def get_filtered_posts(
+    db_session: Session,
+    current_user: User,
+    skip: int,
+    limit: int,
+    all=True,
+    published=True,
+    featured=False,
+    archived=False,
+    query: str | None = None,
+):
+    PermissionChecker(
+        db_session=db_session,
+        roles=current_user.roles,
+        bypass_role="admin",
+        pcheck_models=[
+            GlobalPermissionCheckModel(
+                resource_name=POST_RESOURCE, action_names=[ACTION_READWRITE]
+            ),
+            GlobalPermissionCheckModel(
+                resource_name=POST_RESOURCE, action_names=[ACTION_READ]
+            ),
+        ],
+    ).check()
+
+    db_query = select(Post)
+    if not all:
+        db_query = db_query.where(
+            Post.archived == archived,
+            Post.published == published,
+            Post.featured == featured,
+        )
+    if query:
+        db_query = db_query.where(
+            or_(
+                col(Post.title).ilike(f"%{query}%"),
+                col(Post.description).ilike(f"%{query}%"),
+                col(Post.content).ilike(f"%{query}%"),
+            )
+        )
+    db_query = (
+        db_query.offset(skip).limit(limit).order_by(desc(Post.created_at))
+    )
+    posts = db_session.exec(db_query).all()
     return [post.to_dto() for post in posts]
 
 
