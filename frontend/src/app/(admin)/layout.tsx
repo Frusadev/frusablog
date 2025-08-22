@@ -11,6 +11,7 @@ import {
   Archive,
   Tags,
   MessageSquare,
+  MessageCircle,
   Users,
   UserX,
   Mail,
@@ -101,6 +102,11 @@ export default function RootLayout({
                         label: "Banned Users",
                         href: "/admin/users/banned",
                         icon: <UserX />,
+                      },
+                      {
+                        label: "Messages",
+                        href: "/admin/messages",
+                        icon: <MessageCircle />,
                       },
                       {
                         label: "Send Message",

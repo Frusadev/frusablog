@@ -3,12 +3,20 @@ from typing import Annotated
 from uuid import UUID
 
 from fastapi import Cookie, Depends, Response, WebSocket, WebSocketDisconnect
-from sqlmodel import Session
+from sqlmodel import Session, select
 
+from app.api.routes.v1.dto.user_action import UserMessageCreationDTO
 from app.api.routes.v1.providers.user import get_optional_current_user
-from app.core.db.models import User, ViewAction, VisitAction
+from app.core.config.env import get_env
+from app.core.db.models import User, UserMessage, ViewAction, VisitAction
 from app.core.db.setup import create_db_session
 from app.core.security.checkers import check_existence
+from app.core.security.permissions import (
+    ACTION_READWRITE,
+    GlobalPermissionCheckModel,
+    PermissionChecker,
+)
+from app.core.services.email import send_templated_email
 
 DBSessionDependency = Annotated[Session, Depends(create_db_session)]
 CurrentUserDependency = Annotated[
@@ -40,9 +48,12 @@ async def get_current_visit(
 
 
 async def view_dependency(
-    db_session: DBSessionDependency, post_id: UUID, response: Response
+    db_session: DBSessionDependency,
+    current_user: CurrentUserDependency,
+    post_id: UUID,
+    response: Response,
 ):
-    view = ViewAction(post_id=post_id)
+    view = ViewAction(user=current_user, post_id=post_id)
     db_session.add(view)
     db_session.commit()
     db_session.refresh(view)
@@ -99,3 +110,79 @@ async def listen_to_visit(
         visit.visit_time = visit_time
         db_session.add(visit)
         db_session.commit()
+
+
+async def send_admin_message(
+    db_session: Session, current_user: User, data: UserMessageCreationDTO
+):
+    message = UserMessage(
+        user_id=current_user.id,
+        subject=data.subject,
+        content=data.content,
+    )
+    db_session.add(message)
+    db_session.commit()
+    # Send email to admin
+    try:
+        admin_email = get_env("ADMIN_EMAIL")
+        admin_url = (
+            get_env("FRONTEND_URL") + "/admin"
+            if get_env("FRONTEND_URL")
+            else ""
+        )
+        send_templated_email(
+            email=admin_email,
+            subject=f"[Admin Alert] New User Message: {data.subject}",
+            template_name="admin_alert_message",
+            context={
+                "user": current_user,
+                "message": message,
+                "admin_url": admin_url,
+                "reply_email": current_user.email,
+                "year": 2025,
+                "site_name": get_env("SITE_NAME", "ametsowou.me"),
+            },
+        )
+    except Exception:
+        pass
+
+
+async def get_user_messages(
+    db_session: Session, current_user: User, skip: int, limit: int, all=False
+):
+    PermissionChecker(
+        db_session=db_session,
+        roles=current_user.roles,
+        bypass_role="admin",
+        pcheck_models=[
+            GlobalPermissionCheckModel(
+                resource_name="user_message", action_names=[ACTION_READWRITE]
+            )
+        ],
+    ).check()
+    query = select(UserMessage)
+    if not all:
+        query = query.where(UserMessage.viewed == False)
+    messages = db_session.exec(query.offset(skip).limit(limit)).all()
+    return [message.to_dto() for message in messages]
+
+
+async def get_user_message(
+    db_session: Session, current_user: User, message_id: UUID
+):
+    PermissionChecker(
+        db_session=db_session,
+        roles=current_user.roles,
+        bypass_role="admin",
+        pcheck_models=[
+            GlobalPermissionCheckModel(
+                resource_name="user_message", action_names=[ACTION_READWRITE]
+            )
+        ],
+    ).check()
+    message = check_existence(db_session.get(UserMessage, message_id))
+    message.viewed = True
+    db_session.add(message)
+    db_session.commit()
+    db_session.refresh(message)
+    return message.to_dto()

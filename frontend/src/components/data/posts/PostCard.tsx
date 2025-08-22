@@ -38,9 +38,11 @@ export default function PostCard({
   // Get current user (optional - doesn't throw if not authenticated)
   const { data: currentUser } = useOptionalCurrentUser();
 
+  const hasCover = !!post.cover;
   const postCover = useQuery({
     queryKey: ["/resources", post.cover],
     queryFn: ({ queryKey }) => getFileURL(queryKey[1]),
+    enabled: hasCover,
   });
 
   // Check if current user has liked this post
@@ -94,81 +96,87 @@ export default function PostCard({
   const coverWidth = coverContainerRef.current?.clientWidth ?? 300;
   return (
     <>
-      <Card
-        className={`${
-          cardOrientation === "grid" ? "w-full sm:w-[300px]" : "w-full"
-        } rounded-xl hover:bg-card/80`}
-      >
+      {/* Gradient border wrapper for modern look */}
+      <div className="relative group w-full h-full">
+        <div className="absolute -inset-[1px] rounded-2xl bg-gradient-to-br from-primary/30 via-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        <Card
+          className="relative h-full flex flex-col rounded-2xl overflow-hidden border-border/60 bg-card/70 backdrop-blur supports-[backdrop-filter]:backdrop-blur-md transition-all duration-300 group-hover:shadow-xl group-hover:-translate-y-1"
+        
+        >
+          {/* Subtle shine on hover */}
+          <div className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+            <div className="absolute -top-24 -left-24 h-48 w-48 rotate-45 bg-gradient-to-br from-primary/20 via-primary/0 to-transparent blur-2xl" />
+          </div>
         <Show when={cardOrientation === "list"}>
           <div className="flex flex-col sm:flex-row gap-4 p-4">
-            <div className="flex-shrink-0">
-              <div
-                className="rounded-xl w-full sm:w-32 h-48 sm:h-24 overflow-hidden"
-                ref={coverContainerRef}
-              >
-                <Image
-                  src={`${SERVER_URL}/v1/resources/${post.cover}`}
-                  alt="Post Cover"
-                  width={128}
-                  height={96}
-                  className="w-full h-full object-cover"
-                />
+            <Show when={hasCover}>
+        <div className="flex-shrink-0 w-full sm:w-40 relative group/cover">
+                <div
+          className="rounded-xl w-full h-36 sm:h-28 overflow-hidden ring-1 ring-border/50 bg-muted/40"
+                  ref={coverContainerRef}
+                >
+                  <Image
+                    src={`${SERVER_URL}/v1/resources/${post.cover}`}
+                    alt="Post Cover"
+                    width={160}
+                    height={128}
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover/cover:scale-105"
+                  />
+                </div>
+                <Show when={!!post.featured}>
+                  <Badge className="absolute top-2 left-2 backdrop-blur bg-primary/90 text-primary-foreground flex items-center gap-1 shadow">
+                    <Star className="w-3 h-3 fill-current" />
+                    Featured
+                  </Badge>
+                </Show>
               </div>
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-start justify-between mb-2">
-                <h3 className="text-lg font-semibold cursor-default flex items-center gap-2 line-clamp-2">
-                  {post.title || "Untitled Post"}
-                  <Show when={!!post.featured}>
-                    <Badge
-                      variant="secondary"
-                      className="flex items-center gap-1 flex-shrink-0"
-                    >
-                      <Star className="w-3 h-3 fill-current" />
-                      Featured
-                    </Badge>
-                  </Show>
-                </h3>
-              </div>
-              <p className="text-sm text-muted-foreground cursor-default line-clamp-2 mb-3">
+            </Show>
+            <div className="flex-1 min-w-0 flex flex-col">
+              <h3 className="text-xl font-semibold cursor-default flex items-center gap-2 leading-snug group-hover:text-primary transition-colors line-clamp-2">
+                {post.title || "Untitled Post"}
+              </h3>
+              <p className="mt-2 text-sm text-muted-foreground cursor-default line-clamp-2">
                 {post.description || "No description available."}
               </p>
-              <div className="flex items-center justify-between">
-                <div className="text-sm text-muted-foreground">
+              <div className="mt-3 flex items-center justify-between gap-3 text-xs text-muted-foreground">
+                <span className="inline-flex items-center gap-1">
                   {timeAgo(post.created_at)}
-                </div>
+                </span>
                 <Show when={showLikeButton}>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        likeMutation.mutate();
-                      }}
-                      disabled={likeMutation.isPending}
-                      className={`flex items-center gap-1 transition-colors ${
-                        isLiked
-                          ? "text-red-500 hover:text-red-600"
-                          : "text-muted-foreground hover:text-red-500"
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      likeMutation.mutate();
+                    }}
+                    disabled={likeMutation.isPending}
+                    className={`relative flex items-center gap-1 transition-colors hover:bg-transparent ${
+                      isLiked
+                        ? "text-red-500 hover:text-red-600"
+                        : "text-muted-foreground hover:text-red-500"
+                    }`}
+                  >
+                    <Heart
+                      className={`w-4 h-4 transition-transform duration-300 ${
+                        isLiked ? "fill-red-500 text-red-500 scale-110" : "group-hover:scale-105"
                       }`}
-                    >
-                      <Heart
-                        className={`w-4 h-4 ${isLiked ? "fill-red-500 text-red-500" : ""}`}
-                      />
-                      <span className="text-sm">{localLikes}</span>
-                    </Button>
-                  </div>
+                    />
+                    <span className="text-sm font-medium tabular-nums">
+                      {localLikes}
+                    </span>
+                  </Button>
                 </Show>
               </div>
               <Show when={!!(post.tags && post.tags.length > 0)}>
-                <div className="flex flex-wrap gap-1 mt-2">
+                <div className="mt-3 flex flex-wrap gap-1.5">
                   {post.tags.slice(0, 3).map((tag) => (
                     <ClickableTag
                       key={tag.id}
                       tag={tag}
                       variant="outline"
                       size="sm"
+                      className="hover:bg-primary/10"
                     />
                   ))}
                 </div>
@@ -178,92 +186,90 @@ export default function PostCard({
         </Show>
 
         <Show when={cardOrientation === "grid"}>
-          <CardHeader>
-            <div
-              className="rounded-xl w-full h-[100px] overflow-hidden"
-              ref={coverContainerRef}
-            >
-              <Show when={postCover.isLoading}>
-                <div className="w-full h-full flex items-center justify-center">
-                  <Spinner size={"small"} className="stroke-foreground" />
-                </div>
-              </Show>
-              <Show when={postCover.data === undefined}>
-                <Image
-                  src={"/nomedia.png"}
-                  alt="Post Cover"
-                  width={coverWidth}
-                  height={100}
-                  className="max-w-none max-h-none object-fill"
-                />
-              </Show>
-              <Show when={postCover.data !== undefined}>
-                <Image
-                  src={postCover.data ?? "/nomedia.png"}
-                  alt="Post Cover"
-                  width={coverWidth}
-                  height={100}
-                  className="max-w-none max-h-none object-fill"
-                />
-              </Show>
-            </div>
-            <CardTitle className="text-lg font-semibold cursor-default flex items-center gap-2">
-              {post.title || "Untitled Post"}
-              <Show when={!!post.featured}>
-                <Badge variant="secondary" className="flex items-center gap-1">
-                  <Star className="w-3 h-3 fill-current" />
-                  Featured
-                </Badge>
-              </Show>
-            </CardTitle>
-            <CardDescription className="cursor-default">
-              {post.description || "No description available."}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-2">
-            <div className="flex items-center justify-between">
-              <div className="text-sm text-muted-foreground">
-                {timeAgo(post.created_at)}
+      <CardHeader className={`p-0 ${!hasCover ? "pt-3" : ""}`}>
+            <Show when={hasCover}>
+              <div
+        className="relative w-full h-32 overflow-hidden"
+                ref={coverContainerRef}
+              >
+                <Show when={postCover.isLoading}>
+                  <div className="w-full h-full flex items-center justify-center bg-muted/40">
+                    <Spinner size={"small"} className="stroke-foreground" />
+                  </div>
+                </Show>
+                <Show when={postCover.data !== undefined}>
+                  <Image
+                    src={postCover.data ?? "/nomedia.png"}
+                    alt="Post Cover"
+                    width={coverWidth}
+                    height={128}
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  />
+                </Show>
+                <div className="absolute inset-0 bg-gradient-to-t from-background/95 via-background/20 to-transparent" />
+                <Show when={!!post.featured}>
+                  <Badge className="absolute top-2 left-2 backdrop-blur bg-primary/90 text-primary-foreground flex items-center gap-1 shadow">
+                    <Star className="w-3 h-3 fill-current" />
+                    Featured
+                  </Badge>
+                </Show>
               </div>
-              <Show when={showLikeButton}>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => likeMutation.mutate()}
-                    disabled={likeMutation.isPending}
-                    className={`flex items-center gap-1 transition-colors ${
-                      isLiked
-                        ? "text-red-500 hover:text-red-600"
-                        : "text-muted-foreground hover:text-red-500"
-                    }`}
-                  >
-                    <Heart
-                      className={`w-4 h-4 ${isLiked ? "fill-red-500 text-red-500" : ""}`}
-                    />
-                    <span className="text-sm">{localLikes}</span>
-                  </Button>
-                </div>
-              </Show>
+            </Show>
+            <div className="p-4 pt-3 space-y-1.5">
+              <CardTitle className="text-lg font-semibold cursor-default flex items-center gap-2 leading-snug group-hover:text-primary transition-colors line-clamp-2">
+                {post.title || "Untitled Post"}
+              </CardTitle>
+              <CardDescription className="cursor-default line-clamp-2">
+                {post.description || "No description available."}
+              </CardDescription>
             </div>
+          </CardHeader>
+          <CardContent className="pt-0 px-4 pb-4 flex flex-1 flex-col gap-2">
             <Show when={!!(post.tags && post.tags.length > 0)}>
-              <div className="flex flex-wrap gap-1">
-                {post.tags.map((tag) => (
+              <div className="flex flex-wrap gap-1.5">
+                {post.tags.slice(0, 3).map((tag) => (
                   <ClickableTag
                     key={tag.id}
                     tag={tag}
                     variant="outline"
                     size="sm"
+                    className="hover:bg-primary/10"
                   />
                 ))}
               </div>
             </Show>
+            <div className="mt-auto flex items-center justify-between text-xs text-muted-foreground">
+              <span>{timeAgo(post.created_at)}</span>
+              <Show when={showLikeButton}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    likeMutation.mutate();
+                  }}
+                  disabled={likeMutation.isPending}
+                  className={`relative flex items-center gap-1 transition-colors hover:bg-transparent ${
+                    isLiked
+                      ? "text-red-500 hover:text-red-600"
+                      : "text-muted-foreground hover:text-red-500"
+                  }`}
+                >
+                  <Heart
+                    className={`w-4 h-4 transition-transform duration-300 ${
+                      isLiked ? "fill-red-500 text-red-500 scale-110" : "group-hover:scale-110"
+                    }`}
+                  />
+                  <span className="text-sm font-medium tabular-nums">{localLikes}</span>
+                </Button>
+              </Show>
+            </div>
           </CardContent>
         </Show>
 
         <Show when={!cardOrientation}>
-          <CardHeader>
-            <CardTitle className="text-lg font-semibold cursor-default flex items-center gap-2">
+          <CardHeader className="space-y-2">
+            <CardTitle className="text-xl font-semibold cursor-default flex items-center gap-2 leading-snug group-hover:text-primary transition-colors">
               {post.title || "Untitled Post"}
               <Show when={!!post.featured}>
                 <Badge variant="secondary" className="flex items-center gap-1">
@@ -272,51 +278,56 @@ export default function PostCard({
                 </Badge>
               </Show>
             </CardTitle>
-            <CardDescription className="cursor-default">
+            <CardDescription className="cursor-default line-clamp-3">
               {post.description || "No description available."}
             </CardDescription>
           </CardHeader>
-          <CardContent className="flex flex-col gap-2">
-            <div className="flex items-center justify-between">
-              <div className="text-sm text-muted-foreground">
-                {timeAgo(post.created_at)}
-              </div>
+          <CardContent className="flex flex-col gap-3">
+            <div className="flex items-center justify-between text-xs text-muted-foreground">
+              <span>{timeAgo(post.created_at)}</span>
               <Show when={showLikeButton}>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => likeMutation.mutate()}
-                    disabled={likeMutation.isPending}
-                    className={`flex items-center gap-1 transition-colors ${
-                      isLiked
-                        ? "text-red-500 hover:text-red-600"
-                        : "text-muted-foreground hover:text-red-500"
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    likeMutation.mutate();
+                  }}
+                  disabled={likeMutation.isPending}
+                  className={`relative flex items-center gap-1 transition-colors hover:bg-transparent ${
+                    isLiked
+                      ? "text-red-500 hover:text-red-600"
+                      : "text-muted-foreground hover:text-red-500"
+                  }`}
+                >
+                  <Heart
+                    className={`w-4 h-4 transition-transform duration-300 ${
+                      isLiked ? "fill-red-500 text-red-500 scale-110" : "group-hover:scale-110"
                     }`}
-                  >
-                    <Heart
-                      className={`w-4 h-4 ${isLiked ? "fill-red-500 text-red-500" : ""}`}
-                    />
-                    <span className="text-sm">{localLikes}</span>
-                  </Button>
-                </div>
+                  />
+                  <span className="text-sm font-medium tabular-nums">
+                    {localLikes}
+                  </span>
+                </Button>
               </Show>
             </div>
             <Show when={!!(post.tags && post.tags.length > 0)}>
-              <div className="flex flex-wrap gap-1">
+              <div className="flex flex-wrap gap-1.5">
                 {post.tags.map((tag) => (
                   <ClickableTag
                     key={tag.id}
                     tag={tag}
                     variant="outline"
                     size="sm"
+                    className="hover:bg-primary/10"
                   />
                 ))}
               </div>
             </Show>
           </CardContent>
         </Show>
-      </Card>
+        </Card>
+      </div>
     </>
   );
 }

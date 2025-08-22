@@ -7,6 +7,7 @@ from app.api.routes.v1.dto.message import MessageResponse
 from app.api.routes.v1.dto.user import (
     BanUserRequest,
     BroadcastData,
+    DetailedUserInfo,
     UserDTO,
     UserListResponse,
     UserMessageSendDTO,
@@ -26,6 +27,11 @@ user_router = APIRouter(prefix="/v1", tags=["User management"])
 @user_router.get("/users/me", response_model=UserDTO)
 async def me(current_user: CurrentUserDependency):
     return await user_provider.me(current_user)
+
+
+@user_router.get("/users/me/detailed", response_model=DetailedUserInfo)
+async def detailed_me(current_user: CurrentUserDependency):
+    return await user_provider.detailed_me(current_user)
 
 
 @user_router.get("/users/me/can-post", response_model=bool)
@@ -136,7 +142,9 @@ async def send_broadcast(
 async def search_user(
     db_session: DBSessionDependency,
     current_user: CurrentUserDependency,
-    query: str = Query(..., min_length=1, description="Search query for users"),
+    query: str = Query(
+        ..., min_length=1, description="Search query for users"
+    ),
     skip: int = Query(0, ge=0),
     limit: int = Query(10, ge=1, le=100),
 ):
@@ -146,4 +154,24 @@ async def search_user(
         query=query,
         skip=skip,
         limit=limit,
+    )
+
+
+@user_router.post("/users/me/subscribe")
+async def subscribe_to_newsletter(
+    db_session: DBSessionDependency,
+    current_user: CurrentUserDependency,
+):
+    return await user_provider.join_newsletter(
+        db_session=db_session, current_user=current_user
+    )
+
+
+@user_router.post("/users/me/unsubscribe")
+async def unsubscribe_from_newsletter(
+    db_session: DBSessionDependency,
+    current_user: CurrentUserDependency,
+):
+    return await user_provider.leave_newsletter(
+        db_session=db_session, current_user=current_user
     )

@@ -142,9 +142,13 @@ async def create_post(
     db_session: DBSessionDependency,
     current_user: CurrentUserDependency,
     data: PostCreationDTO,
+    notify: bool = True,
 ):
     return await post_provider.create_post(
-        db_session=db_session, current_user=current_user, data=data
+        db_session=db_session,
+        current_user=current_user,
+        data=data,
+        notify=notify,
     )
 
 

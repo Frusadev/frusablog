@@ -12,6 +12,7 @@ export interface DetailedUserInfo {
   joined_at: string;
   banned: boolean;
   last_ban_motive: string | null;
+  in_newsletter: boolean;
 }
 
 export interface UserListResponse {
@@ -33,4 +34,14 @@ export interface BroadcastData {
 
 export interface BanUserRequest {
   motive: string;
+}
+
+// Admin: User messages (contact/unsubscribe etc.)
+export interface UserMessageDTO {
+  id: string;
+  user_id: string;
+  subject: string;
+  content: string;
+  created_at: string; // ISO datetime
+  viewed: boolean;
 }

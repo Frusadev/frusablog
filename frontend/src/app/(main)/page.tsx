@@ -1,45 +1,18 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getPosts, getFeaturedPosts } from "@/lib/api/requests/post";
 import { getPublicStats } from "@/lib/api/requests/stats";
-import PostCard from "@/components/data/posts/PostCard";
 import Navigation from "@/components/layouts/Navigation";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Spinner } from "@/components/ui/Spinner";
 import PostSearchInfinite from "@/components/ui/custom/PostSearchInfinite";
-import ClickableTag from "@/components/ui/custom/ClickableTag";
-import Show from "@/components/wrappers/Show";
-import {
-  Star,
-  TrendingUp,
-  Calendar,
-  User,
-  Eye,
-  ChevronLeft,
-  ChevronRight,
-} from "lucide-react";
-import { timeAgo } from "@/lib/utils";
-import { getResourceUrl } from "@/lib/utils/fileUtils";
-import { createPostSlug } from "@/lib/utils/slug";
-import { useRouter } from "next/navigation";
+import MainLayout from "@/components/sections/MainLayout";
 import { useVisitTracking } from "@/hooks/useUserTracking";
-import Image from "next/image";
 
 const POSTS_PER_PAGE = 8;
 
 export default function MainPage() {
   const [currentPage, setCurrentPage] = useState(1);
-  const [currentFeaturedIndex, setCurrentFeaturedIndex] = useState(0);
-  const [isCarouselPaused, setIsCarouselPaused] = useState(false);
-  const [isTransitioning, setIsTransitioning] = useState(false);
-  const carouselRef = useRef<HTMLDivElement>(null);
-  const touchStartX = useRef<number>(0);
-  const touchEndX = useRef<number>(0);
-  const router = useRouter();
 
   // Initialize visit tracking for the main page
   useVisitTracking();
@@ -76,587 +49,60 @@ export default function MainPage() {
   const stats = statsQuery.data;
   const hasMorePosts = posts.length === POSTS_PER_PAGE;
 
-  // Carousel navigation functions with animation support
-  const nextSlide = useCallback(() => {
-    if (isTransitioning || featuredPosts.length <= 1) return;
-    setIsTransitioning(true);
-    setCurrentFeaturedIndex((prev) =>
-      prev === featuredPosts.length - 1 ? 0 : prev + 1,
-    );
-    setTimeout(() => setIsTransitioning(false), 500);
-  }, [isTransitioning, featuredPosts.length]);
-
-  const prevSlide = useCallback(() => {
-    if (isTransitioning || featuredPosts.length <= 1) return;
-    setIsTransitioning(true);
-    setCurrentFeaturedIndex((prev) =>
-      prev === 0 ? featuredPosts.length - 1 : prev - 1,
-    );
-    setTimeout(() => setIsTransitioning(false), 500);
-  }, [isTransitioning, featuredPosts.length]);
-
-  const goToSlide = useCallback(
-    (index: number) => {
-      if (isTransitioning || index === currentFeaturedIndex) return;
-      setIsTransitioning(true);
-      setCurrentFeaturedIndex(index);
-      setTimeout(() => setIsTransitioning(false), 500);
-    },
-    [isTransitioning, currentFeaturedIndex],
-  );
-
-  // Touch event handlers
-  const handleTouchStart = (e: React.TouchEvent) => {
-    touchStartX.current = e.targetTouches[0].clientX;
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    touchEndX.current = e.targetTouches[0].clientX;
-  };
-
-  const handleTouchEnd = () => {
-    if (!touchStartX.current || !touchEndX.current) return;
-
-    const distance = touchStartX.current - touchEndX.current;
-    const isLeftSwipe = distance > 50;
-    const isRightSwipe = distance < -50;
-
-    if (isLeftSwipe && featuredPosts.length > 1) {
-      nextSlide();
-    }
-    if (isRightSwipe && featuredPosts.length > 1) {
-      prevSlide();
-    }
-
-    // Reset touch positions
-    touchStartX.current = 0;
-    touchEndX.current = 0;
-  };
-
-  // Auto-rotate featured posts every 5 seconds (pause on hover)
-  useEffect(() => {
-    if (featuredPosts.length <= 1 || isCarouselPaused || isTransitioning)
-      return;
-
-    const interval = setInterval(() => {
-      nextSlide();
-    }, 5000);
-
-    return () => clearInterval(interval);
-  }, [featuredPosts.length, isCarouselPaused, isTransitioning, nextSlide]);
-
-  // Keyboard navigation
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (featuredPosts.length <= 1) return;
-
-      if (e.key === "ArrowLeft") {
-        e.preventDefault();
-        prevSlide();
-      } else if (e.key === "ArrowRight") {
-        e.preventDefault();
-        nextSlide();
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [featuredPosts.length, prevSlide, nextSlide]);
-
   return (
-    <div>
+    <div className="relative min-h-screen bg-background">
+      {/* Ambient decorative gradients */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden [mask-image:radial-gradient(circle_at_center,black,transparent_70%)]">
+        <div className="absolute -top-40 -left-32 h-[520px] w-[520px] rounded-full bg-gradient-to-br from-primary/15 via-primary/5 to-transparent blur-3xl" />
+        <div className="absolute top-1/3 -right-40 h-[480px] w-[480px] rounded-full bg-gradient-to-tr from-purple-500/10 via-fuchsia-400/10 to-transparent blur-3xl" />
+        <div className="absolute bottom-0 left-1/4 h-[360px] w-[360px] rounded-full bg-gradient-to-tr from-emerald-400/10 via-teal-300/10 to-transparent blur-3xl" />
+      </div>
+
       <Navigation />
-      <div className="min-h-screen bg-background">
-        <div className="container mx-auto px-4 py-8 max-w-7xl">
-          {/* Header with Search */}
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8">
-            <div className="w-full sm:w-auto">
+
+      {/* Hero / Search Section */}
+      <header className="relative">
+        <div className="container max-w-7xl mx-auto px-4 pt-12 md:pt-16 pb-6 md:pb-10">
+          <div className="flex flex-col items-center text-center gap-6">
+            <div className="space-y-4 max-w-3xl">
+              <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight bg-gradient-to-br from-foreground via-foreground/90 to-foreground/70 bg-clip-text text-transparent">
+                Ideas, Insights & Building in Public
+              </h1>
+              <p className="text-base md:text-lg text-muted-foreground leading-relaxed">
+                Deep dives, experiments and learnings around software, products
+                and the craft of shipping. Explore the latest or search anything
+                below.
+              </p>
+            </div>
+            <div className="w-full max-w-2xl flex justify-center">
               <PostSearchInfinite />
             </div>
           </div>
-
-          {/* Featured Posts Section */}
-          <Show when={!featuredQuery.isLoading && featuredPosts.length > 0}>
-            <div className="mb-12">
-              <div className="text-center mb-8">
-                <h2 className="text-3xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">
-                  Featured Stories
-                </h2>
-                <p className="text-muted-foreground max-w-2xl mx-auto">
-                  Discover my most compelling articles, handpicked for their
-                  insight and impact
-                </p>
-              </div>
-
-              <div className="relative overflow-hidden">
-                {/* Main Featured Post */}
-                <div className="mb-6">
-                  <Card
-                    ref={carouselRef}
-                    className="overflow-hidden border-2 border-border/50 shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-muted/20 to-background px-0 pb-8 lg:pb-10"
-                    onMouseEnter={() => setIsCarouselPaused(true)}
-                    onMouseLeave={() => setIsCarouselPaused(false)}
-                    onTouchStart={handleTouchStart}
-                    onTouchMove={handleTouchMove}
-                    onTouchEnd={handleTouchEnd}
-                  >
-                    <div className="grid grid-cols-1 lg:grid-cols-2 min-h-[480px] lg:min-h-[520px] relative">
-                      {/* Image Section */}
-                      <div className="relative overflow-hidden bg-muted">
-                        <div
-                          className="transition-all duration-500 ease-in-out transform"
-                          style={{
-                            transform: `translateX(-${currentFeaturedIndex * 100}%)`,
-                          }}
-                        >
-                          <div
-                            className="flex"
-                            style={{ width: `${featuredPosts.length * 100}%` }}
-                          >
-                            {featuredPosts.map((post, index) => (
-                              <div
-                                key={post.id}
-                                className="w-full flex-shrink-0"
-                              >
-                                <Show when={!!post.cover}>
-                                  <Image
-                                    src={
-                                      getResourceUrl(post.cover) ||
-                                      "/nomedia.png"
-                                    }
-                                    alt={post.title || "Featured post"}
-                                    width={600}
-                                    height={400}
-                                    className={`w-full h-full object-cover transition-all duration-700 ${
-                                      index === currentFeaturedIndex
-                                        ? "hover:scale-105"
-                                        : "scale-100"
-                                    }`}
-                                    onError={(e) => {
-                                      (e.target as HTMLImageElement).src =
-                                        "/nomedia.png";
-                                    }}
-                                  />
-                                </Show>
-                                <Show when={!post.cover}>
-                                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-muted/50">
-                                    <div className="text-center">
-                                      <Star className="w-16 h-16 mx-auto mb-2 text-muted-foreground" />
-                                      <p className="text-muted-foreground">
-                                        Featured Article
-                                      </p>
-                                    </div>
-                                  </div>
-                                </Show>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-
-                        {/* Featured Badge */}
-                        <div className="absolute top-4 left-4 z-10">
-                          <Badge className="bg-primary/90 text-primary-foreground border-none shadow-lg animate-in fade-in-50 slide-in-from-left-5 duration-300">
-                            <Star className="w-3 h-3 mr-1 fill-current" />
-                            Featured
-                          </Badge>
-                        </div>
-
-                        {/* Swipe indicator for mobile */}
-                        <Show when={featuredPosts.length > 1}>
-                          <div className="absolute bottom-4 right-4 z-10 bg-black/20 backdrop-blur-sm rounded-full px-3 py-1 text-white text-xs animate-pulse lg:hidden">
-                            Swipe to explore
-                          </div>
-                        </Show>
-                      </div>
-
-                      {/* Content Section */}
-                      <div className="p-8 flex flex-col justify-center">
-                        <div
-                          className={`space-y-4 transition-all duration-500 ease-in-out ${
-                            isTransitioning
-                              ? "opacity-0 transform translate-x-4"
-                              : "opacity-100 transform translate-x-0"
-                          }`}
-                        >
-                          <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                            <div className="flex items-center gap-2">
-                              <User className="w-4 h-4" />
-                              <span>
-                                {featuredPosts[currentFeaturedIndex]?.author
-                                  ?.name ||
-                                  featuredPosts[currentFeaturedIndex]?.author
-                                    ?.username}
-                              </span>
-                            </div>
-                            <span>•</span>
-                            <div className="flex items-center gap-2">
-                              <Calendar className="w-4 h-4" />
-                              <span>
-                                {featuredPosts[currentFeaturedIndex]?.created_at
-                                  ? timeAgo(
-                                      featuredPosts[currentFeaturedIndex]
-                                        .created_at,
-                                    )
-                                  : "Unknown date"}
-                              </span>
-                            </div>
-                          </div>
-
-                          <h3 className="text-2xl md:text-3xl font-bold leading-tight hover:text-primary transition-colors">
-                            {featuredPosts[currentFeaturedIndex]?.title}
-                          </h3>
-
-                          <p className="text-muted-foreground leading-relaxed line-clamp-3">
-                            {featuredPosts[currentFeaturedIndex]?.description}
-                          </p>
-
-                          <div className="flex flex-wrap gap-2 mb-4">
-                            {featuredPosts[currentFeaturedIndex]?.tags
-                              ?.slice(0, 3)
-                              .map((tag) => (
-                                <ClickableTag
-                                  key={tag.id}
-                                  tag={tag}
-                                  variant="secondary"
-                                  size="sm"
-                                  className="hover:bg-primary/10 transition-colors"
-                                />
-                              ))}
-                            {(featuredPosts[currentFeaturedIndex]?.tags
-                              ?.length || 0) > 3 && (
-                              <Badge variant="outline" className="text-xs">
-                                +
-                                {(featuredPosts[currentFeaturedIndex]?.tags
-                                  ?.length || 0) - 3}{" "}
-                                more
-                              </Badge>
-                            )}
-                          </div>
-
-                          <Button
-                            onClick={() =>
-                              router.push(
-                                `/post/${createPostSlug(
-                                  featuredPosts[currentFeaturedIndex]?.title,
-                                  featuredPosts[currentFeaturedIndex]?.id,
-                                )}`,
-                              )
-                            }
-                            className="w-full sm:w-auto transform hover:scale-105 transition-all duration-200"
-                            size="lg"
-                          >
-                            Read Article
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  </Card>
-                </div>
-
-                {/* Navigation Controls */}
-                <Show when={featuredPosts.length > 1}>
-                  <div className="flex items-center justify-between h-16 px-4">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={prevSlide}
-                      disabled={isTransitioning}
-                      className="flex items-center gap-2 hover:scale-105 transition-all duration-200"
-                    >
-                      <ChevronLeft className="w-4 h-4" />
-                      Previous
-                    </Button>
-
-                    {/* Pagination Dots */}
-                    <div className="flex gap-2">
-                      {featuredPosts.map((_, index) => (
-                        <button
-                          key={index}
-                          onClick={() => goToSlide(index)}
-                          disabled={isTransitioning}
-                          className={`h-2 rounded-full transition-all duration-300 hover:scale-110 ${
-                            index === currentFeaturedIndex
-                              ? "bg-primary w-6 scale-110"
-                              : "bg-muted-foreground/30 hover:bg-muted-foreground/50 w-2"
-                          }`}
-                        />
-                      ))}
-                    </div>
-
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={nextSlide}
-                      disabled={isTransitioning}
-                      className="flex items-center gap-2 hover:scale-105 transition-all duration-200"
-                    >
-                      Next
-                      <ChevronRight className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </Show>
-              </div>
-            </div>
-          </Show>
-
-          {/* Loading state for featured posts */}
-          <Show when={featuredQuery.isLoading}>
-            <div className="mb-12">
-              <div className="text-center mb-8">
-                <div className="h-10 bg-muted rounded-lg mb-4 max-w-md mx-auto animate-pulse"></div>
-                <div className="h-6 bg-muted rounded-lg max-w-2xl mx-auto animate-pulse"></div>
-              </div>
-              <Card className="overflow-hidden border-2 border-border/50 min-h-[400px]">
-                <div className="grid grid-cols-1 lg:grid-cols-2 min-h-[400px]">
-                  <div className="bg-muted animate-pulse"></div>
-                  <div className="p-8 space-y-4">
-                    <div className="h-4 bg-muted rounded animate-pulse"></div>
-                    <div className="h-8 bg-muted rounded animate-pulse"></div>
-                    <div className="h-4 bg-muted rounded animate-pulse"></div>
-                    <div className="h-4 bg-muted rounded animate-pulse w-3/4"></div>
-                    <div className="h-10 bg-muted rounded animate-pulse w-1/2"></div>
-                  </div>
-                </div>
-              </Card>
-            </div>
-          </Show>
-
-          {/* Main Layout */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Main Content - Posts List */}
-            <div className="lg:col-span-2">
-              <div className="flex items-center gap-2 mb-6">
-                <Calendar className="w-6 h-6 text-primary" />
-                <h2 className="text-2xl font-bold">Latest Articles</h2>
-              </div>
-
-              <Show when={postsQuery.isLoading && currentPage === 1}>
-                <div className="flex justify-center py-12">
-                  <Spinner size="large" className="stroke-primary" />
-                </div>
-              </Show>
-
-              <Show when={!postsQuery.isLoading}>
-                <div className="space-y-6">
-                  {posts.map((post) => (
-                    <div
-                      key={post.id}
-                      onClick={() =>
-                        router.push(
-                          `/post/${createPostSlug(post.title, post.id)}`,
-                        )
-                      }
-                      className="cursor-pointer transform transition-transform hover:scale-[1.02]"
-                    >
-                      <PostCard post={post} orientation="list" />
-                    </div>
-                  ))}
-                </div>
-              </Show>
-
-              <Show when={posts.length === 0 && !postsQuery.isLoading}>
-                <Card className="text-center py-12">
-                  <CardContent className="pt-6">
-                    <Calendar className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-                    <h3 className="text-xl font-semibold mb-2">No Posts Yet</h3>
-                    <p className="text-muted-foreground">
-                      Check back later for amazing content!
-                    </p>
-                  </CardContent>
-                </Card>
-              </Show>
-
-              <Show when={hasMorePosts && !postsQuery.isLoading}>
-                <div className="text-center mt-8">
-                  <Button
-                    onClick={handleLoadMore}
-                    variant="outline"
-                    disabled={postsQuery.isFetching}
-                    className="min-w-[120px]"
-                  >
-                    <Show when={postsQuery.isFetching}>
-                      <Spinner size="small" className="mr-2" />
-                    </Show>
-                    Load More
-                  </Button>
-                </div>
-              </Show>
-            </div>
-
-            {/* Sidebar */}
-            <div className="space-y-6 lg:space-y-8">
-              {/* Featured Posts */}
-              <Show when={featuredPosts.length > 0}>
-                <Card className="overflow-hidden">
-                  <CardHeader className="pb-4">
-                    <CardTitle className="flex items-center gap-2 text-lg">
-                      <Star className="w-5 h-5 text-yellow-500 fill-current" />
-                      Featured Posts
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    {featuredPosts.slice(0, 3).map((post) => (
-                      <div
-                        key={post.id}
-                        className="group cursor-pointer"
-                        onClick={() =>
-                          router.push(
-                            `/post/${createPostSlug(post.title, post.id)}`,
-                          )
-                        }
-                      >
-                        <div className="flex gap-3">
-                          <Show when={!!post.cover}>
-                            <div className="w-12 h-12 sm:w-16 sm:h-16 bg-muted rounded-lg flex-shrink-0 overflow-hidden">
-                              <Image
-                                src={
-                                  getResourceUrl(post.cover) || "/nomedia.png"
-                                }
-                                alt={post.title}
-                                width={64}
-                                height={64}
-                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-200"
-                                onError={(e) => {
-                                  (e.target as HTMLImageElement).src =
-                                    "/nomedia.png";
-                                }}
-                              />
-                            </div>
-                          </Show>
-                          <div className="flex-1 min-w-0">
-                            <h4 className="font-medium line-clamp-2 group-hover:text-primary transition-colors text-sm">
-                              {post.title}
-                            </h4>
-                            <div className="flex items-center gap-1.5 mt-1 text-xs text-muted-foreground">
-                              <User className="w-3 h-3 flex-shrink-0" />
-                              <span className="truncate">
-                                {post.author.name || post.author.username}
-                              </span>
-                              <span className="flex-shrink-0">•</span>
-                              <span className="flex-shrink-0">
-                                {post.created_at
-                                  ? timeAgo(post.created_at)
-                                  : "Unknown date"}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-1 mt-2 overflow-hidden">
-                              <div className="flex gap-1 min-w-0">
-                                {post.tags?.slice(0, 2).map((tag) => (
-                                  <ClickableTag
-                                    key={tag.id}
-                                    tag={tag}
-                                    variant="secondary"
-                                    size="sm"
-                                    className="max-w-[80px] truncate"
-                                  />
-                                ))}
-                              </div>
-                              {(post.tags?.length || 0) > 2 && (
-                                <span className="text-xs text-muted-foreground flex-shrink-0">
-                                  +{(post.tags?.length || 0) - 2}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </CardContent>
-                </Card>
-              </Show>
-
-              {/* Popular Tags */}
-              <Card className="overflow-hidden">
-                <CardHeader className="pb-4">
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <TrendingUp className="w-5 h-5 text-primary" />
-                    Popular Topics
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto">
-                    {Array.from(
-                      new Set(
-                        [...featuredPosts, ...posts]
-                          .flatMap((post) => post.tags || [])
-                          .slice(0, 15),
-                      ),
-                    ).map((tag) => (
-                      <ClickableTag
-                        key={tag.id}
-                        tag={tag}
-                        variant="outline"
-                        size="sm"
-                        className="max-w-[120px] truncate"
-                      />
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Stats Card */}
-              <Card className="overflow-hidden">
-                <CardHeader className="pb-4">
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <Eye className="w-5 h-5 text-primary" />
-                    Blog Stats
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <Show when={statsQuery.isLoading}>
-                    <div className="flex justify-center py-4">
-                      <Spinner size="small" className="stroke-primary" />
-                    </div>
-                  </Show>
-                  <Show when={statsQuery.isError}>
-                    <div className="text-center py-4 text-muted-foreground">
-                      <p className="text-sm">Unable to load stats</p>
-                    </div>
-                  </Show>
-                  <Show when={!statsQuery.isLoading && !statsQuery.isError}>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="text-center">
-                        <div className="text-2xl font-bold text-primary">
-                          {stats?.total_articles || 0}
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                          Articles
-                        </div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-2xl font-bold text-primary">
-                          {stats?.featured || 0}
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                          Featured
-                        </div>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="text-center">
-                        <div className="text-2xl font-bold text-primary">
-                          {stats?.total_likes || 0}
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                          Total Likes
-                        </div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-2xl font-bold text-primary">
-                          {stats?.total_comments || 0}
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                          Comments
-                        </div>
-                      </div>
-                    </div>
-                  </Show>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
         </div>
-      </div>
+      </header>
+
+      {/* Content */}
+      <main className="relative z-10">
+        <div className="container mx-auto px-4 pb-16 max-w-7xl">
+          <MainLayout
+            posts={posts}
+            featuredPosts={featuredPosts}
+            featuredLoading={featuredQuery.isLoading}
+            isLoading={postsQuery.isLoading && currentPage === 1}
+            isFetching={postsQuery.isFetching}
+            hasMorePosts={hasMorePosts}
+            currentPage={currentPage}
+            stats={stats}
+            statsLoading={statsQuery.isLoading}
+            statsError={statsQuery.isError}
+            onLoadMore={handleLoadMore}
+          />
+
+          {/* Feedback Section */}
+          <section className="mt-16">
+          </section>
+        </div>
+      </main>
     </div>
   );
 }

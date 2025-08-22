@@ -12,6 +12,7 @@ from app.api.routes.v1.dto.user import (
     UserMessageSendDTO,
 )
 from app.api.routes.v1.providers.auth.config import LOGIN_SESSION_COOKIE_NAME
+
 from app.core.config.env import get_env
 from app.core.db.models import LoginSession, User
 from app.core.db.setup import create_db_session
@@ -33,6 +34,10 @@ DBSessionDependency = Annotated[Session, Depends(create_db_session)]
 
 async def me(current_user: User):
     return current_user.to_dto()
+
+
+async def detailed_me(current_user: User):
+    return current_user.detailed_dto()
 
 
 async def banned(current_user: User):
@@ -273,3 +278,25 @@ async def search_user(
         .limit(limit)
     ).all()
     return [user.detailed_dto() for user in users]
+
+
+async def join_newsletter(db_session: Session, current_user: User):
+    if not current_user.in_newsletter:
+        current_user.in_newsletter = True
+        db_session.add(current_user)
+        db_session.commit()
+        db_session.refresh(current_user)
+        return MessageResponse(message="Successfully joined the newsletter!")
+    return MessageResponse(
+        message="You are already subscribed to the newsletter!"
+    )
+
+
+async def leave_newsletter(db_session: Session, current_user: User):
+    if current_user.in_newsletter:
+        current_user.in_newsletter = False
+        db_session.add(current_user)
+        db_session.commit()
+        db_session.refresh(current_user)
+        return MessageResponse(message="Successfully left the newsletter!")
+    return MessageResponse(message="You are not subscribed to the newsletter!")

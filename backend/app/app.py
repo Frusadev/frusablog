@@ -39,17 +39,13 @@ app.include_router(v1_stats_router)
 app.include_router(v1_resource_controller)
 app.include_router(v1_user_action_router)
 
+CORS_ORIGINS = [c.strip() for c in get_env("CORS_ORIGINS", "").split(",")]
+
+print(CORS_ORIGINS)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "https://ametsowou.me",
-        "https://www.ametsowou.me",
-        "https://www.blog.ametsowou.me",
-        "https://blog.ametsowou.me",
-        "https://blog.localhost",
-    ],
+    allow_origins=CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
