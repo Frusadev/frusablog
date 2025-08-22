@@ -1,68 +1,46 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Message from {{ site_name or 'ametsowou.me' }}</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f4f4f4;
-        }
-        .container {
-            background-color: #ffffff;
-            padding: 30px;
-            border-radius: 5px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-        .header {
-            border-bottom: 2px solid #eee;
-            padding-bottom: 15px;
-            margin-bottom: 20px;
-        }
-        .site-name {
-            font-size: 20px;
-            font-weight: bold;
-            color: #2c3e50;
-            margin: 0;
-        }
-        .date {
-            color: #7f8c8d;
-            font-size: 14px;
-            margin: 5px 0 0 0;
-        }
-        .message-content {
-            font-size: 16px;
-            margin: 20px 0;
-            white-space: pre-wrap;
-        }
-        .footer {
-            margin-top: 30px;
-            padding-top: 15px;
-            border-top: 1px solid #eee;
-            color: #7f8c8d;
-            font-size: 12px;
-            text-align: center;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>{{ site_name or 'ametsowou.me' }} • Message</title>
+  <meta name="x-preheader" content="New message from {{ site_name or 'ametsowou.me' }}" />
+  <style>
+    :root { color-scheme: light dark; }
+  body { margin:0; padding:0; background:#f5f7fa; background:oklch(0.967 0.001 286.375); -webkit-font-smoothing:antialiased; }
+    table { border-collapse:collapse; }
+    .wrapper { width:100%; table-layout:fixed; }
+    .outer { width:100%; max-width:600px; margin:0 auto; }
+  .accent-bar { height:5px; background:#2f3034; background:oklch(0.21 0.006 285.885); background-image:linear-gradient(90deg, oklch(0.21 0.006 285.885), oklch(0.35 0.01 285.9)); border-radius:6px 6px 0 0; }
+  .card { background:#fff; background:oklch(1 0 0); border:1px solid #dfe3e7; border:1px solid oklch(0.92 0.004 286.32); border-radius:14px; padding:44px 48px 48px; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,Cantarell,sans-serif; line-height:1.55; color:#22252a; color:oklch(0.141 0.005 285.823); box-shadow:0 2px 4px rgba(0,0,0,.04),0 8px 22px rgba(0,0,0,.07); }
+  h1 { margin:0 0 10px; font-size:22px; font-weight:600; line-height:1.25; color:#2f3034; color:oklch(0.21 0.006 285.885); text-align:center; }
+  .meta { font-size:11px; letter-spacing:.5px; text-transform:uppercase; display:inline-block; padding:4px 10px 5px; background:#eef1f4; background:oklch(0.95 0.004 286.3); border:1px solid oklch(0.92 0.004 286.32); border-radius:999px; color:#535861; color:oklch(0.552 0.016 285.938); margin:0 0 22px; text-align:center; }
+  .content-box { font-size:15px; background:#f6f7f9; background:oklch(0.967 0.001 286.375); border:1px solid #e3e6ea; border:1px solid oklch(0.92 0.004 286.32); padding:20px 22px 24px; border-radius:8px; margin:0 0 30px; white-space:pre-wrap; }
+  .footer { border-top:1px solid #e3e6ea; border-top:1px solid oklch(0.92 0.004 286.32); padding-top:18px; font-size:12px; color:#66707b; color:oklch(0.552 0.016 285.938); text-align:center; }
+  .brand { font-size:13px; font-weight:600; letter-spacing:.5px; text-transform:uppercase; color:oklch(0.552 0.016 285.938); margin:0 0 20px; text-align:center; }
+    a { color:inherit; }
+  @media (max-width:640px){ .card{padding:34px 26px 42px;} h1{font-size:20px;} }
+  @media (prefers-color-scheme:dark){ body{background:#14161b; background:oklch(0.141 0.005 285.823);} .card{background:#1f2227; background:oklch(0.17 0.005 285.85); border-color:oklch(0.32 0.006 286 / 40%); box-shadow:0 4px 20px rgba(0,0,0,.55);} .content-box{background:#2a2c30; background:oklch(0.274 0.006 286.033); border-color:oklch(1 0 0 / 12%);} .meta{background:oklch(0.24 0.006 286.02); color:oklch(0.78 0.02 286);} .footer{border-top-color:oklch(1 0 0 / 12%); color:oklch(0.705 0.015 286.067);} }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1 class="site-name">{{ site_name or 'ametsowou.me' }}</h1>
-            <p class="date">{{ message_date }}</p>
-        </div>
-        
-        <div class="message-content">{{ message_content }}</div>
-        
-        <div class="footer">
-            This message was sent from {{ site_name or 'ametsowou.me' }}
-        </div>
-    </div>
+  <table role="presentation" class="wrapper" width="100%" cellpadding="0" cellspacing="0">
+    <tr>
+      <td align="center" style="padding:20px;">
+        <table role="presentation" class="outer" cellpadding="0" cellspacing="0">
+          <tr><td class="accent-bar"></td></tr>
+          <tr>
+            <td class="card">
+              <div class="brand">{{ site_name or 'ametsowou.me' }}</div>
+              <h1>New Message</h1>
+              <p class="meta">{{ message_date }}</p>
+              <div class="content-box">{{ message_content }}</div>
+              <div class="footer">Message from {{ site_name or 'ametsowou.me' }}</div>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
 </body>
 </html>

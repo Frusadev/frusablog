@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>{{ site_name or 'ametsowou.me' }} • New Post: {{ post.title }}</title>
+  <meta name="x-preheader" content="New article on {{ site_name or 'the blog' }}: {{ post.title }}" />
+  <style>
+    :root { color-scheme: light dark; }
+    body { margin:0; padding:0; background:#f5f7fa; background:oklch(0.967 0.001 286.375); -webkit-font-smoothing:antialiased; }
+    table { border-collapse:collapse; }
+    img { border:0; max-width:100%; height:auto; line-height:100%; }
+    .wrapper { width:100%; table-layout:fixed; }
+    .outer { width:100%; max-width:600px; margin:0 auto; }
+  .accent-bar { height:5px; background:#2f3034; background:oklch(0.21 0.006 285.885); background-image:linear-gradient(90deg, oklch(0.21 0.006 285.885), oklch(0.35 0.01 285.9)); border-radius:6px 6px 0 0; }
+  .card { background:#fff; background:oklch(1 0 0); border:1px solid #dfe3e7; border:1px solid oklch(0.92 0.004 286.32); border-radius:14px; padding:44px 48px 50px; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,Cantarell,sans-serif; color:#22252a; color:oklch(0.141 0.005 285.823); line-height:1.55; box-shadow:0 2px 4px rgba(0,0,0,.04),0 8px 22px rgba(0,0,0,.07); }
+  h1 { margin:0 0 12px; font-size:22px; font-weight:600; color:#2f3034; color:oklch(0.21 0.006 285.885); }
+  .brand { font-size:13px; font-weight:600; letter-spacing:.5px; text-transform:uppercase; color:oklch(0.552 0.016 285.938); margin:0 0 22px; text-align:left; }
+    p { margin:0 0 16px; font-size:15px; }
+  .preview { border:1px solid #e3e6ea; border:1px solid oklch(0.92 0.004 286.32); border-radius:10px; overflow:hidden; margin:16px 0 24px; background:#f6f7f9; background:oklch(0.967 0.001 286.375); box-shadow:0 1px 2px rgba(0,0,0,.04),0 3px 6px rgba(0,0,0,.06); }
+    .preview img { display:block; width:100%; }
+    .preview-inner { padding:18px 20px 22px; }
+  .post-title { font-size:18px; margin:0 0 8px; font-weight:600; color:#22252a; color:oklch(0.21 0.006 285.885); }
+  .post-desc { font-size:14px; margin:0 0 16px; color:#5a6169; color:oklch(0.552 0.016 285.938); }
+    .tags { margin:0 0 10px; padding:0; list-style:none; }
+  .tags span { display:inline-block; font-size:11px; padding:4px 10px 5px; border:1px solid oklch(0.92 0.004 286.32); background:oklch(0.95 0.004 286.3); border-radius:999px; margin:0 6px 8px 0; color:#535861; color:oklch(0.552 0.016 285.938); font-weight:500; }
+  .btn { display:inline-block; background:#2f3034; background:linear-gradient(180deg, oklch(0.35 0.01 285.9), oklch(0.21 0.006 285.885)); color:#fff; color:oklch(0.985 0 0); text-decoration:none; padding:13px 26px 13px; border-radius:8px; font-size:14px; font-weight:600; border:1px solid oklch(0.18 0.006 285.8); box-shadow:0 1px 2px rgba(0,0,0,.18),0 4px 10px rgba(0,0,0,.12); }
+  .btn:hover { filter:brightness(1.05); }
+  .meta { font-size:11px; letter-spacing:.5px; text-transform:uppercase; display:inline-block; padding:4px 10px 5px; background:#eef1f4; background:oklch(0.95 0.004 286.3); border:1px solid oklch(0.92 0.004 286.32); border-radius:999px; color:#535861; color:oklch(0.552 0.016 285.938); margin:10px 0 4px; }
+  .footer { border-top:1px solid #e3e6ea; border-top:1px solid oklch(0.92 0.004 286.32); margin-top:34px; padding-top:18px; font-size:12px; text-align:center; color:#66707b; color:oklch(0.552 0.016 285.938); }
+    .unsubscribe { margin-top:8px; font-size:11px; }
+    .unsubscribe a { color:inherit; text-decoration:underline; }
+  @media (max-width:640px){ .card{padding:34px 26px 44px;} h1{font-size:20px;} .preview-inner{padding:16px 16px 20px;} }
+  @media (prefers-color-scheme:dark){ body{background:#14161b; background:oklch(0.141 0.005 285.823);} .card{background:#1f2227; background:oklch(0.17 0.005 285.85); border-color:oklch(0.32 0.006 286 / 40%); box-shadow:0 4px 20px rgba(0,0,0,.55);} .preview{background:#2a2c30; background:oklch(0.274 0.006 286.033); border-color:oklch(1 0 0 / 12%);} .post-desc{color:oklch(0.705 0.015 286.067);} .tags span{background:oklch(0.24 0.006 286.02); border-color:oklch(1 0 0 / 12%); color:oklch(0.78 0.02 286);} .meta{background:oklch(0.24 0.006 286.02); color:oklch(0.78 0.02 286);} .footer{border-top-color:oklch(1 0 0 / 12%); color:oklch(0.705 0.015 286.067);} }
+  </style>
+</head>
+<body>
+  <table role="presentation" class="wrapper" width="100%" cellpadding="0" cellspacing="0">
+    <tr>
+      <td align="center" style="padding:20px;">
+        <table role="presentation" class="outer" cellpadding="0" cellspacing="0">
+          <tr><td class="accent-bar"></td></tr>
+          <tr>
+            <td class="card">
+              <div class="brand">{{ site_name or 'ametsowou.me' }}</div>
+              <h1>New Post Published</h1>
+              <p>Hi {{ user.first_name or user.name or user.username or 'there' }},</p>
+              <p>A new article just went live on {{ site_name or 'the blog' }}:</p>
+              <div class="preview">
+                {% if cover_url %}<img src="{{ cover_url }}" alt="Cover image" />{% endif %}
+                <div class="preview-inner">
+                  <div class="post-title">{{ post.title }}</div>
+                  <div class="post-desc">{{ post.description }}</div>
+                  {% if post.tags %}
+                  <div class="tags">{% for tag in post.tags[:6] %}<span>#{{ tag.name }}</span>{% endfor %}</div>
+                  {% endif %}
+                  <p style="margin:0 0 8px;"><a href="{{ post_url }}" class="btn">Read the full article</a></p>
+                  <p class="meta">{{ post.created_at.strftime('%Y-%m-%d') if post.created_at else 'TODAY' }}</p>
+                  <p style="margin:6px 0 0; font-size:12px; color:oklch(0.552 0.016 285.938);">By {{ post.author.name or post.author.username }}</p>
+                </div>
+              </div>
+              <div class="footer">Sent by {{ author_name or 'Daniel' }}
+                <div class="unsubscribe">No longer want these updates? <a href="{{ unsubscribe_url }}">Unsubscribe</a></div>
+              </div>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

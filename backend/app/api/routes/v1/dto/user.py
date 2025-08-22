@@ -18,6 +18,7 @@ class DetailedUserInfo(BaseModel):
     joined_at: datetime
     banned: bool
     last_ban_motive: str | None
+    in_newsletter: bool
 
 
 class UserListResponse(BaseModel):
@@ -39,3 +40,8 @@ class BroadcastData(BaseModel):
 
 class BanUserRequest(BaseModel):
     motive: str = Field(min_length=100)
+
+
+class UnsubscribeReasonDTO(BaseModel):
+    reason: str = Field(min_length=1, max_length=500)
+    is_custom: bool = False

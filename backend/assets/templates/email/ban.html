@@ -1,145 +1,58 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Account Suspended - ametsowou.me</title>
-    <style>
-      body {
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-          line-height: 1.6;
-          color: #333;
-          max-width: 500px;
-          margin: 0 auto;
-          padding: 20px;
-          background-color: #f8f9fa;
-      }
-      .container {
-          background-color: #ffffff;
-          padding: 40px;
-          border-radius: 8px;
-          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-          text-align: center;
-          border-left: 4px solid #dc3545;
-      }
-      .logo {
-          font-size: 24px;
-          font-weight: bold;
-          color: #495057;
-          margin-bottom: 30px;
-      }
-      .ban-title {
-          color: #dc3545;
-          font-size: 28px;
-          margin-bottom: 20px;
-      }
-      .user-details {
-          background-color: #f8f9fa;
-          padding: 20px;
-          border-radius: 6px;
-          margin: 20px 0;
-          text-align: left;
-      }
-      .detail-row {
-          display: flex;
-          justify-content: space-between;
-          margin: 10px 0;
-          padding: 5px 0;
-          border-bottom: 1px solid #e9ecef;
-      }
-      .detail-row:last-child {
-          border-bottom: none;
-      }
-      .detail-label {
-          font-weight: bold;
-          color: #6c757d;
-      }
-      .detail-value {
-          color: #333;
-          font-weight: 500;
-      }
-      .ban-reason {
-          background-color: #fff3cd;
-          border: 1px solid #ffeaa7;
-          padding: 15px;
-          border-radius: 6px;
-          margin: 20px 0;
-          font-size: 14px;
-      }
-      .appeal-button {
-          display: inline-block;
-          background: linear-gradient(135deg, #007bff, #0056b3);
-          color: white;
-          padding: 12px 25px;
-          text-decoration: none;
-          border-radius: 8px;
-          font-weight: bold;
-          margin: 20px 0;
-          font-size: 14px;
-          transition: transform 0.2s;
-      }
-      .appeal-button:hover {
-          transform: translateY(-2px);
-      }
-      .footer {
-          margin-top: 30px;
-          padding-top: 20px;
-          border-top: 1px solid #e9ecef;
-          color: #6c757d;
-          font-size: 14px;
-      }
-      @media (max-width: 600px) {
-          body {
-              padding: 10px;
-          }
-          .container {
-              padding: 25px;
-          }
-          .ban-title {
-              font-size: 24px;
-          }
-          .detail-row {
-              flex-direction: column;
-              gap: 5px;
-          }
-      }
-    </style>
-  </head>
-  <body>
-    <div class="container">
-      <div class="logo">ametsowou.me</div>
-      <h1 class="ban-title">Account Suspended ⚠️</h1>
-      <p>Hi <strong>{{ user.first_name or user.username }}</strong>,</p>
-      <p>Your account has been suspended due to a violation of our community guidelines.</p>
-      <div class="user-details">
-        <div class="detail-row">
-          <span class="detail-label">Username:</span>
-          <span class="detail-value">{{ user.username }}</span>
-        </div>
-        <div class="detail-row">
-          <span class="detail-label">Suspension Date:</span>
-          <span class="detail-value">{{ ban_date }}</span>
-        </div>
-        <div class="detail-row">
-          <span class="detail-label">Status:</span>
-          <span class="detail-value">Permanently Suspended</span>
-        </div>
-      </div>
-      <div class="ban-reason">
-        <strong>⚖️ Reason for Suspension:</strong><br>
-        {{ ban_reason }}
-      </div>
-      <p>This decision was made after careful review of your account activity. If you believe this suspension was made in error, you may submit an appeal.</p>
-      {% if appeal_url %}
-      <a href="{{ appeal_url }}" class="appeal-button">Submit Appeal</a>
-      {% endif %}
-      <div class="footer">
-        <p>For questions about this decision, please contact our support team.<br>
-          <strong>{{ site_name or 'ametsowou.me' }} Moderation Team</strong></p>
-        <p style="margin-top: 15px; font-size: 12px; color: #868e96;">
-          This is an automated message. Please do not reply to this email.
-        </p>
-      </div>
-    </div>
-  </body>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>{{ site_name or 'ametsowou.me' }} • Account Suspended</title>
+  <style>
+    :root { color-scheme: light dark; }
+    body { margin:0; padding:0; background:#f5f7fa; background:oklch(0.967 0.001 286.375); -webkit-font-smoothing:antialiased; }
+    table { border-collapse:collapse; }
+    .wrapper { width:100%; table-layout:fixed; }
+    .outer { width:100%; max-width:600px; margin:0 auto; }
+    .accent-bar { height:4px; background:#b53c1d; background:oklch(0.577 0.245 27.325); border-radius:4px 4px 0 0; }
+    .card { background:#fff; background:oklch(1 0 0); border:1px solid #e3e6ea; border:1px solid oklch(0.92 0.004 286.32); border-radius:10px; padding:40px 44px 44px; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,Cantarell,sans-serif; color:#22252a; color:oklch(0.141 0.005 285.823); line-height:1.55; }
+    h1 { margin:0 0 14px; font-size:22px; font-weight:600; color:#b53c1d; color:oklch(0.577 0.245 27.325); }
+    p { margin:0 0 16px; font-size:15px; }
+    .list-box { background:#f6f7f9; background:oklch(0.967 0.001 286.375); border:1px solid #e3e6ea; border:1px solid oklch(0.92 0.004 286.32); padding:14px 18px 6px; border-radius:6px; margin:6px 0 18px; }
+    .row { font-size:13px; padding:6px 0 8px; border-bottom:1px solid #e3e6ea; border-bottom:1px solid oklch(0.92 0.004 286.32); display:flex; justify-content:space-between; gap:24px; }
+    .row:last-child { border-bottom:none; }
+    .label { font-weight:600; color:#5a6169; color:oklch(0.552 0.016 285.938); }
+    .value { color:#22252a; color:oklch(0.21 0.006 285.885); font-weight:500; }
+    .reason { font-size:13px; background:#fff; background:oklch(1 0 0); border:1px solid #e3e6ea; border:1px solid oklch(0.92 0.004 286.32); padding:14px 16px 16px; border-radius:6px; margin:4px 0 20px; }
+    .reason strong { color:#b53c1d; color:oklch(0.577 0.245 27.325); }
+    .btn { display:inline-block; background:#2f3034; background:oklch(0.21 0.006 285.885); color:#fff; color:oklch(0.985 0 0); text-decoration:none; padding:10px 20px; border-radius:6px; font-size:14px; font-weight:600; }
+    .btn:hover { opacity:.92; }
+    .footer { border-top:1px solid #e3e6ea; border-top:1px solid oklch(0.92 0.004 286.32); margin-top:26px; padding-top:16px; font-size:12px; color:#66707b; color:oklch(0.552 0.016 285.938); text-align:center; }
+    @media (max-width:640px){ .card{padding:30px 26px;} h1{font-size:20px;} .row{flex-direction:column; gap:2px;} }
+    @media (prefers-color-scheme:dark){ body{background:#14161b; background:oklch(0.141 0.005 285.823);} .card{background:#303237; background:oklch(0.21 0.006 285.885); color:oklch(0.985 0 0);} .list-box{background:#2a2c30; background:oklch(0.274 0.006 286.033); border-color:oklch(1 0 0 / 10%);} .row{border-bottom-color:oklch(1 0 0 / 10%);} .reason{background:#2a2c30; background:oklch(0.274 0.006 286.033); border-color:oklch(1 0 0 / 10%);} .footer{border-top-color:oklch(1 0 0 / 10%); color:oklch(0.705 0.015 286.067);} }
+  </style>
+</head>
+<body>
+  <table role="presentation" class="wrapper" cellpadding="0" cellspacing="0" width="100%">
+    <tr>
+      <td align="center" style="padding:20px;">
+        <table role="presentation" class="outer" cellpadding="0" cellspacing="0">
+          <tr><td class="accent-bar"></td></tr>
+          <tr>
+            <td class="card">
+              <h1>Account Suspended</h1>
+              <p>Hi <strong>{{ user.first_name or user.username }}</strong>,</p>
+              <p>Your account has been suspended due to a violation of our community guidelines.</p>
+              <div class="list-box">
+                <div class="row"><span class="label">Username</span><span class="value">{{ user.username }}</span></div>
+                <div class="row"><span class="label">Suspension Date</span><span class="value">{{ ban_date }}</span></div>
+                <div class="row"><span class="label">Status</span><span class="value">Permanently Suspended</span></div>
+              </div>
+              <div class="reason"><strong>Reason:</strong><br />{{ ban_reason }}</div>
+              <p>If you believe this was an error you may request a review.</p>
+              {% if appeal_url %}<p style="margin:0 0 12px;"><a href="{{ appeal_url }}" class="btn">Submit Appeal</a></p>{% endif %}
+              <div class="footer">This is an automated message. Please do not reply.<br />© {{ year }} {{ site_name or 'ametsowou.me' }}</div>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
 </html>

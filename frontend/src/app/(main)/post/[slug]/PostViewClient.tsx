@@ -63,6 +63,7 @@ import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
 import rehypeRaw from "rehype-raw";
 import { useViewTracking } from "@/hooks/useUserTracking";
+import FeedbackForm from "@/components/ui/custom/FeedbackForm";
 import type {
   SupportedLanguages,
   PostTranslationResult,
@@ -1106,6 +1107,19 @@ export default function PostViewClient({ slug }: PostViewClientProps) {
               </div>
             </Show>
           </div>
+        </div>
+
+        {/* Feedback Section */}
+        <div className="mt-12 pt-8 border-t border-border">
+          <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+            <MessageSquare className="w-6 h-6" />
+            Have feedback or suggestions?
+          </h2>
+          <FeedbackForm
+            heading="Have feedback or suggestions?"
+            defaultSubject={`Feedback on: ${post.title}`}
+            compact={true}
+          />
         </div>
 
         {/* Footer Actions */}
