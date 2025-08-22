@@ -121,6 +121,7 @@ async def send_admin_message(
         content=data.content,
     )
     db_session.add(message)
+    db_session.commit()
     # Send email to admin
     try:
         admin_email = get_env("ADMIN_EMAIL")
