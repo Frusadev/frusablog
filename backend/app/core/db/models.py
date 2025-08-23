@@ -121,12 +121,39 @@ class Tag(SQLModel, table=True):
         return TagDTO(name=self.name, id=self.id)
 
 
+class PostSeries(SQLModel, table=True):
+    id: UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    title: str
+    description: str | None = None
+    cover: UUID | None = None
+    created_at: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc)
+    )
+    last_updated: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc)
+    )
+    posts: list["Post"] = Relationship(back_populates="post_series")
+
+    def to_dto(self):
+        from app.api.routes.v1.dto.post_series import PostSeriesDTO
+
+        return PostSeriesDTO(
+            id=self.id,
+            title=self.title,
+            description=self.description,
+            cover=self.cover,
+            created_at=self.created_at,
+            last_updated=self.last_updated,
+        )
+
+
 class Post(SQLModel, table=True):
     id: UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     title: str = Field(max_length=100)
     description: str = Field(max_length=400)
     content: str
     cover: UUID | None = None
+    series: UUID | None = Field(foreign_key="postseries.id", default=None)
     created_at: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc)
     )
@@ -148,6 +175,7 @@ class Post(SQLModel, table=True):
     views: list["ViewAction"] = Relationship(
         back_populates="post", cascade_delete=True
     )
+    post_series: PostSeries | None = Relationship(back_populates="posts")
 
     def to_dto(self):
         return PostDTO(
@@ -163,6 +191,7 @@ class Post(SQLModel, table=True):
             created_at=self.created_at,
             author=self.author.to_dto(),
             tags=[tag.to_dto() for tag in self.tags],
+            series=self.series,
         )
 
 
