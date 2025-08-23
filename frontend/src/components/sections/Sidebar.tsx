@@ -3,6 +3,7 @@
 import FeaturedPostsSidebar from "./sidebar/FeaturedPostsSidebar";
 import PopularTagsSidebar from "./sidebar/PopularTagsSidebar";
 import BlogStatsSidebar from "./sidebar/BlogStatsSidebar";
+import SeriesSidebar from "./sidebar/SeriesSidebar";
 import type { Post } from "@/lib/api/dto/post";
 import FeedbackForm from "../ui/custom/FeedbackForm";
 
@@ -31,6 +32,7 @@ export default function Sidebar({
   return (
     <div className="space-y-6 lg:space-y-8">
       <FeaturedPostsSidebar featuredPosts={featuredPosts} />
+  <SeriesSidebar />
       <PopularTagsSidebar featuredPosts={featuredPosts} posts={posts} />
       <BlogStatsSidebar
         stats={stats}
