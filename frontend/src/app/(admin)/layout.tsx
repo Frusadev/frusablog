@@ -75,6 +75,11 @@ export default function RootLayout({
                         icon: <Tags />,
                       },
                       {
+                        label: "Series",
+                        href: "/admin/series",
+                        icon: <FileText />,
+                      },
+                      {
                         label: "Comments",
                         href: "/admin/comments",
                         icon: <MessageSquare />,

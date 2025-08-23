@@ -12,6 +12,9 @@ from app.api.routes.v1.controllers.file import (
     resource_router as v1_resource_controller,
 )
 from app.api.routes.v1.controllers.post import post_router as v1_post_router
+from app.api.routes.v1.controllers.post_series import (
+    post_series_router as v1_post_series_router,
+)
 from app.api.routes.v1.controllers.stats import stats_router as v1_stats_router
 from app.api.routes.v1.controllers.tag import tag_router as v1_tag_router
 from app.api.routes.v1.controllers.user import user_router as v1_user_router
@@ -32,6 +35,7 @@ app = FastAPI(
 
 app.include_router(v1_auth_router)
 app.include_router(v1_post_router)
+app.include_router(v1_post_series_router)
 app.include_router(v1_user_router)
 app.include_router(v1_comment_router)
 app.include_router(v1_tag_router)

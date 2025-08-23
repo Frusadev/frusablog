@@ -14,6 +14,7 @@ export interface Post {
   created_at: string; // ISO 8601 timestamp
   author: User;
   tags: Tag[];
+  series?: string | null; // UUID
 }
 
 export interface PostCreationDTO {
@@ -23,6 +24,7 @@ export interface PostCreationDTO {
   content: string;
   published: boolean;
   tags: Tag[];
+  series?: string | null; // UUID
 }
 
 export interface PostUpdateDTO {
@@ -35,6 +37,7 @@ export interface PostUpdateDTO {
   archived: boolean;
   featured: boolean;
   tag_ids: string[];
+  series?: string | null; // UUID
 };
 
 export interface PostTranslationResult {
