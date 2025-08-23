@@ -24,12 +24,15 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { getPost, updatePost, deletePost } from "@/lib/api/requests/post";
+import { getAllPostSeries } from "@/lib/api/requests/post-series";
+import SelectSeriesCommand from "@/components/ui/custom/SelectSeriesCommand";
 import { getTags, createTag } from "@/lib/api/requests/tag";
 import { uploadFile, type FileResource } from "@/lib/api/requests/file";
 import { getResourceUrl } from "@/lib/utils/fileUtils";
 import { createPostSlug } from "@/lib/utils/slug";
 import type { PostUpdateDTO } from "@/lib/api/dto/post";
 import type { Tag } from "@/lib/api/dto/tag";
+import type { PostSeries } from "@/lib/api/dto/post-series";
 import {
   ArrowLeft,
   Save,
@@ -59,6 +62,7 @@ export default function PostEditPage() {
   const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
   const [newTagName, setNewTagName] = useState("");
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [seriesId, setSeriesId] = useState<string | null>(null);
 
   // Drag and drop state
   const [isDragging, setIsDragging] = useState(false);
@@ -76,6 +80,13 @@ export default function PostEditPage() {
     queryFn: () => getTags({ limit: 100 }),
   });
 
+  // Fetch available series for selection
+  const {} = useQuery<PostSeries[]>({
+    queryKey: ["series", 0, 100],
+    queryFn: () => getAllPostSeries(0, 100),
+    staleTime: 5 * 60 * 1000,
+  });
+
   // Initialize form with post data
   useEffect(() => {
     if (post) {
@@ -86,6 +97,7 @@ export default function PostEditPage() {
       setArchived(post.archived);
       setFeatured(post.featured);
       setSelectedTags(post.tags || []);
+      setSeriesId(post.series ?? null);
 
       if (post.cover) {
         const coverUrl = getResourceUrl(post.cover);
@@ -313,6 +325,7 @@ export default function PostEditPage() {
       archived,
       featured,
       tag_ids: selectedTags.map((tag) => tag.id),
+      series: seriesId || null,
     };
 
     updateMutation.mutate(updateData);
@@ -579,6 +592,16 @@ export default function PostEditPage() {
 
         {/* Sidebar */}
         <div className="space-y-6">
+          {/* Series Selection */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Series (optional)</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <Label>Assign to a series</Label>
+              <SelectSeriesCommand value={seriesId} onChange={setSeriesId} />
+            </CardContent>
+          </Card>
           {/* Status Controls */}
           <Card>
             <CardHeader>

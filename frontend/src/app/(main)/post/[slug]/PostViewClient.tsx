@@ -9,6 +9,7 @@ import {
   getPostViews,
   checkHasLiked,
 } from "@/lib/api/requests/post";
+import { getSeriesPosts, getPostSeries } from "@/lib/api/requests/post-series";
 import {
   getPostComments,
   createComment,
@@ -52,6 +53,7 @@ import {
 } from "lucide-react";
 import { timeAgo, formatNumber } from "@/lib/utils";
 import { extractIdFromSlug } from "@/lib/utils/slug";
+import { createPostSlug } from "@/lib/utils/slug";
 import { getResourceUrl } from "@/lib/utils/fileUtils";
 import { useRouter } from "next/navigation";
 import { useOptionalCurrentUser } from "@/hooks/useAuth";
@@ -133,6 +135,22 @@ export default function PostViewClient({ slug }: PostViewClientProps) {
     queryKey: ["post-views", postId],
     queryFn: () => getPostViews(postId),
     enabled: !!postId,
+  });
+
+  // Series info and related posts (max 5), if this post belongs to a series
+  const { data: seriesInfo } = useQuery({
+    queryKey: ["series", post?.series],
+    queryFn: () => getPostSeries(post!.series as string),
+    enabled: !!post?.series,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const { data: relatedInSeries = [], isLoading: relatedLoading } = useQuery({
+    queryKey: ["series-posts", post?.series, 6],
+    queryFn: () => getSeriesPosts(post!.series as string, 0, 6),
+    enabled: !!post?.series,
+    select: (posts) => posts.filter(p => p.id !== postId).slice(0, 5),
+    staleTime: 60 * 1000,
   });
 
   // Check if current user has liked this post
@@ -1121,6 +1139,65 @@ export default function PostViewClient({ slug }: PostViewClientProps) {
             compact={true}
           />
         </div>
+
+        {/* More in this series (bottom-right sidebar) */}
+        <Show when={!!post.series}>
+          <div className="mt-12 pt-8 border-t border-border">
+            <div className="lg:flex lg:justify-end">
+              <aside className="w-full lg:max-w-sm">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold">
+                    More in {seriesInfo?.title ? seriesInfo.title : "this series"}
+                  </h3>
+                  <Link href={`/series/${post.series}`} className="text-sm text-primary hover:underline">
+                    View all
+                  </Link>
+                </div>
+
+                <Show when={relatedLoading}>
+                  <div className="text-sm text-muted-foreground">Loading...</div>
+                </Show>
+
+                <Show when={!relatedLoading && relatedInSeries.length === 0}>
+                  <div className="text-sm text-muted-foreground">No other posts in this series yet.</div>
+                </Show>
+
+                <ul className="space-y-3">
+                  {relatedInSeries.map((rp) => {
+                    const coverUrl = rp.cover ? getResourceUrl(rp.cover) : null;
+                    return (
+                      <li key={rp.id}>
+                        <Link
+                          href={`/post/${createPostSlug(rp.title, rp.id)}`}
+                          className="group flex items-center gap-3 rounded-md p-2 hover:bg-muted/60 transition-colors"
+                        >
+                          <div className="w-16 h-12 rounded-md overflow-hidden bg-muted flex-shrink-0">
+                            <img
+                              src={coverUrl || "/nomedia.png"}
+                              alt={rp.title}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).src = "/nomedia.png";
+                              }}
+                            />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-sm font-medium line-clamp-2 group-hover:underline">
+                              {rp.title}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {timeAgo(rp.created_at)}
+                            </p>
+                          </div>
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </aside>
+            </div>
+          </div>
+        </Show>
 
         {/* Footer Actions */}
         <div className="mt-12 pt-8 border-t border-border">

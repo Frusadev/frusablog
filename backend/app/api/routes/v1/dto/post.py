@@ -14,6 +14,7 @@ class PostCreationDTO(BaseModel):
     content: str
     tags: list[TagDTO]
     published: bool
+    series: UUID | None = None
 
 
 class PostDTO(BaseModel):
@@ -29,6 +30,7 @@ class PostDTO(BaseModel):
     created_at: datetime
     author: UserDTO
     tags: list[TagDTO]
+    series: UUID | None = None
 
 
 class PostMutationDTO(BaseModel):
@@ -41,6 +43,7 @@ class PostMutationDTO(BaseModel):
     archived: bool
     featured: bool
     tag_ids: list[str]
+    series: UUID | None = None
 
 
 class PostTranslationResult(BaseModel):

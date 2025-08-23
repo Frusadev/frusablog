@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from uuid import UUID
 
 from sqlmodel import Session, col, desc, func, or_, select
@@ -9,7 +10,7 @@ from app.api.routes.v1.dto.post import (
     PostTranslationResult,
 )
 from app.core.db.builders.permission import PermissionBuilder
-from app.core.db.models import Post, Role, Tag, User, ViewAction
+from app.core.db.models import Post, PostSeries, Role, Tag, User, ViewAction
 from app.core.logging.log import log_error
 from app.core.security.checkers import check_existence
 from app.core.security.permissions import (
@@ -47,7 +48,15 @@ async def create_post(
         title=data.title,
         description=data.description,
         cover=data.cover,
+        series=data.series,
     )
+    if data.series is not None:
+        post_series = check_existence(
+            db_session.get(PostSeries, data.series),
+            detail="Post series not found.",
+        )
+        post_series.last_updated = datetime.now(timezone.utc)
+        db_session.add(post_series)
     tags = [
         tag
         for tag in [db_session.get(Tag, tag.id) for tag in data.tags]
@@ -181,6 +190,15 @@ async def edit_post(
         )
         for tag_id in data.tag_ids
     ]
+
+    if data.series is not None:
+        post_series = check_existence(
+            db_session.get(PostSeries, data.series),
+            detail="Post series not found.",
+        )
+        post_series.last_updated = datetime.now(timezone.utc)
+        db_session.add(post_series)
+
     post.title = data.title
     post.description = data.description
     post.cover = data.cover
@@ -188,6 +206,7 @@ async def edit_post(
     post.published = data.published
     post.archived = data.archived
     post.featured = data.featured
+    post.series = data.series
     post.tags = tags
     db_session.add(post)
     db_session.commit()
@@ -449,6 +468,9 @@ async def search_all_posts(
 
 async def get_featured_posts(db_session: Session, skip: int, limit: int):
     posts = db_session.exec(
-        select(Post).where(Post.featured == True).offset(skip).limit(limit)
+        select(Post)
+        .where(Post.featured == True, Post.published == True)
+        .offset(skip)
+        .limit(limit)
     ).all()
     return [post.to_dto() for post in posts]
